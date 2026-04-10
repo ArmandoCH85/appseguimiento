@@ -1,0 +1,27 @@
+<?php
+
+return [
+    'name'           => 'nombre',
+    'email'          => 'email',
+    'password'       => 'contraseña',
+    'slug'           => 'identificador',
+    'primary_domain' => 'dominio principal',
+    'is_active'      => 'estado',
+    'is_super_admin' => 'super administrador',
+    'admin_email'    => 'email del administrador',
+    'admin_password' => 'contraseña del administrador',
+    'description'    => 'descripción',
+    'type'           => 'tipo',
+    'is_required'    => 'es obligatorio',
+    'order'          => 'orden',
+    'form_id'        => 'formulario',
+    'user_id'        => 'usuario',
+    'assigned_at'    => 'fecha de asignación',
+    'revoked_at'     => 'fecha de revocación',
+    'submitted_at'   => 'fecha de envío',
+    'status'         => 'estado',
+    'value'          => 'valor',
+    'label'          => 'etiqueta',
+    'field_name'     => 'nombre del campo',
+    'field_type'     => 'tipo de campo',
+];

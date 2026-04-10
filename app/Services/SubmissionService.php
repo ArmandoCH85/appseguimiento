@@ -1,0 +1,120 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Services;
+
+use App\Contracts\SubmissionServiceContract;
+use App\Enums\SubmissionStatus;
+use App\Models\Tenant\FormVersion;
+use App\Models\Tenant\Submission;
+use App\Models\Tenant\User;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
+
+class SubmissionService implements SubmissionServiceContract
+{
+    public function createOrRetrieve(FormVersion $version, User $user, array $data): Submission
+    {
+        $existing = Submission::query()
+            ->with('responses')
+            ->where('idempotency_key', $data['idempotency_key'])
+            ->first();
+
+        if ($existing) {
+            return $existing;
+        }
+
+        $responses = $this->validateResponses($version, $data['responses']);
+
+        return DB::transaction(function () use ($version, $user, $data, $responses): Submission {
+            $submission = Submission::query()->create([
+                'form_version_id' => $version->getKey(),
+                'user_id' => $user->getKey(),
+                'idempotency_key' => $data['idempotency_key'],
+                'latitude' => $data['latitude'],
+                'longitude' => $data['longitude'],
+                'status' => SubmissionStatus::PendingPhotos,
+                'submitted_at' => now(),
+            ]);
+
+            foreach ($responses as $response) {
+                $submission->responses()->create($response);
+            }
+
+            return $submission->load('responses');
+        });
+    }
+
+    public function validateResponses(FormVersion $version, array $responses): array
+    {
+        $snapshot = collect($version->schema_snapshot)
+            ->keyBy('name');
+
+        $unknownFields = collect(array_keys($responses))
+            ->diff($snapshot->keys())
+            ->values()
+            ->all();
+
+        if ($unknownFields !== []) {
+            throw ValidationException::withMessages([
+                'responses' => ['Unknown fields: '.implode(', ', $unknownFields)],
+            ]);
+        }
+
+        $rules = [];
+
+        foreach ($snapshot as $fieldName => $field) {
+            $fieldRules = $field['validation_rules'] ?? [];
+
+            if (($field['is_required'] ?? false) === true) {
+                array_unshift($fieldRules, 'required');
+            } else {
+                array_unshift($fieldRules, 'nullable');
+            }
+
+            $type = $field['type'] ?? null;
+
+            if ($type === 'number') {
+                $fieldRules[] = 'numeric';
+            } elseif ($type === 'checkbox') {
+                $fieldRules[] = 'array';
+            } elseif ($type === 'file') {
+                // File uploads skip string validation
+            } else {
+                $fieldRules[] = 'string';
+            }
+
+            $rules[$fieldName] = $fieldRules;
+        }
+
+        $validated = Validator::make($responses, $rules)->validate();
+
+        return $snapshot
+            ->map(function (array $field, string $fieldName) use ($validated): array {
+                return [
+                    'field_name' => $fieldName,
+                    'field_type' => $field['type'],
+                    'value' => array_key_exists($fieldName, $validated)
+                        ? $this->normalizeValue($validated[$fieldName])
+                        : null,
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
+    protected function normalizeValue(mixed $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        if (is_array($value)) {
+            return json_encode($value, JSON_THROW_ON_ERROR);
+        }
+
+        return (string) $value;
+    }
+}
