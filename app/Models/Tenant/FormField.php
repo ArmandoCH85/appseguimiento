@@ -9,10 +9,20 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class FormField extends Model
 {
     use HasUlids;
+
+    protected static function booted(): void
+    {
+        static::saving(function (self $field): void {
+            if (blank($field->name) && filled($field->label)) {
+                $field->name = Str::slug($field->label, '_');
+            }
+        });
+    }
 
     protected $fillable = [
         'form_id',

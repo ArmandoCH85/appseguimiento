@@ -9,6 +9,7 @@ use App\Filament\Tenant\Resources\FormResource\Pages;
 use App\Models\Tenant\Form;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -167,6 +168,11 @@ class FormResource extends Resource
                         ->orderColumn('order')
                         ->itemLabel(fn (array $state): string => $state['label'] ?? 'Nueva pregunta')
                         ->schema([
+                            Hidden::make('name')
+                                ->dehydrated()
+                                ->dehydrateStateUsing(fn ($state, callable $get): string => filled($state)
+                                    ? (string) $state
+                                    : Str::slug((string) $get('label'), '_')),
                             // ── Fila 1: pregunta + identificador ──
                             TextInput::make('label')
                                 ->label('Pregunta visible')
