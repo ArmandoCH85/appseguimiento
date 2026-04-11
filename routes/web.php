@@ -3,8 +3,8 @@
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('welcome');
-});
+    // Middleware handles redirect, this fallback should never be reached
+})->middleware('root.redirect');
 
 
 Route::get('/api/verify-domain', function (\Illuminate\Http\Request $request) {

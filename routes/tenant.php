@@ -24,9 +24,7 @@ Route::middleware([
     InitializeTenancyByDomain::class,
     PreventAccessFromCentralDomains::class,
 ])->group(function () {
-    Route::get('/', function () {
-        return 'This is your multi-tenant application. The id of the current tenant is '.tenant('id');
-    });
+    // Root route redirect handled in web.php via RootRedirect middleware
 
     // Ruta para descargar archivos de submissions con autorización
     Route::get('/app/submissions/{submission}/files/{filename}', [SubmissionFileController::class, 'show'])

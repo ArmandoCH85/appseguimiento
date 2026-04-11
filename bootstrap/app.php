@@ -15,6 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(prepend: [
             \App\Http\Middleware\InitializeTenancyByDomainIfApplicable::class,
         ]);
+
+        $middleware->alias([
+            'root.redirect' => \App\Http\Middleware\RootRedirect::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
