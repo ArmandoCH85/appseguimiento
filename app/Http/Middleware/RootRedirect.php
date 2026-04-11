@@ -26,3 +26,4 @@ class RootRedirect
         return redirect('/app', 302);
     }
 }
+

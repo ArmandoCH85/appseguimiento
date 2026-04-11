@@ -42,4 +42,4 @@ it('does not redirect non-root paths', function () {
     });
 
     expect($response->getStatusCode())->toBe(200);
-});
+}); 

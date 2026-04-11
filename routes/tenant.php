@@ -31,3 +31,4 @@ Route::middleware([
         ->name('tenant.submissions.files.show')
         ->middleware(['auth']);
 });
+

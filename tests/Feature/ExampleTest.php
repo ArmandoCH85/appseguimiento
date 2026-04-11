@@ -5,3 +5,4 @@ it('redirects root', function () {
 
     $response->assertStatus(302);
 });
+
