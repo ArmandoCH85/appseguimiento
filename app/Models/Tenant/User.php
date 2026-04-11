@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Models\Tenant;
 
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -14,7 +16,7 @@ use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser
 {
     use HasApiTokens;
     use HasFactory;
@@ -57,5 +59,10 @@ class User extends Authenticatable
         return LogOptions::defaults()
             ->logOnly(['name', 'email', 'is_active'])
             ->logOnlyDirty();
+    }
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return $this->is_active && ! $this->trashed() && ($panel->getId() === 'tenant');
     }
 }
