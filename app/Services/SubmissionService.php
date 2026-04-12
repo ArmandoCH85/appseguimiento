@@ -30,7 +30,7 @@ class SubmissionService implements SubmissionServiceContract
         $isDraft = $status === SubmissionStatus::Draft->value;
 
         $responses = $isDraft
-            ? ($data['responses'] ?? [])
+            ? $this->normalizeDraftResponses($version, $data['responses'] ?? [])
             : $this->validateResponses($version, $data['responses'] ?? []);
 
         return DB::transaction(function () use ($version, $user, $data, $responses, $status, $isDraft): Submission {
@@ -121,6 +121,22 @@ class SubmissionService implements SubmissionServiceContract
         }
 
         return (string) $value;
+    }
+
+    protected function normalizeDraftResponses(FormVersion $version, array $responses): array
+    {
+        $snapshot = collect($version->schema_snapshot)->keyBy('name');
+
+        return collect($responses)
+            ->map(function ($value, string $fieldName) use ($snapshot): array {
+                return [
+                    'field_name' => $fieldName,
+                    'field_type' => $snapshot->get($fieldName, [])['type'] ?? 'text',
+                    'value' => $this->normalizeValue($value),
+                ];
+            })
+            ->values()
+            ->all();
     }
 
     public function updateSubmission(Submission $submission, User $user, array $data): Submission
