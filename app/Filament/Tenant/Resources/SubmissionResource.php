@@ -202,7 +202,7 @@ class SubmissionResource extends Resource
     /**
      * Construye una entrada para valores de array (Checkbox).
      */
-    protected static function buildArrayEntry(string $label, string $value, array $options): TextEntry
+    protected static function buildArrayEntry(string $label, ?string $value, array $options): TextEntry
     {
         $decoded = json_decode($value, true);
 
@@ -233,7 +233,7 @@ class SubmissionResource extends Resource
     /**
      * Construye una entrada para opciones (Select/Radio).
      */
-    protected static function buildOptionEntry(string $label, string $value, array $options): TextEntry
+    protected static function buildOptionEntry(string $label, ?string $value, array $options): TextEntry
     {
         if ($value === '' || $value === null) {
             return TextEntry::make('response_'.$label)
@@ -315,7 +315,7 @@ class SubmissionResource extends Resource
     /**
      * Formatea una fecha ISO a formato legible.
      */
-    protected static function formatDate(string $value): string
+    protected static function formatDate(?string $value): string
     {
         if (empty($value)) {
             return 'Sin fecha';
@@ -331,7 +331,7 @@ class SubmissionResource extends Resource
     /**
      * Formatea una hora ISO a formato legible.
      */
-    protected static function formatTime(string $value): string
+    protected static function formatTime(?string $value): string
     {
         if (empty($value)) {
             return 'Sin hora';
