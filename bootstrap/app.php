@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -18,9 +19,15 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'root.redirect' => \App\Http\Middleware\RootRedirect::class,
+            'operator.role' => \App\Http\Middleware\EnsureOperatorRole::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->render(function (\Throwable $e, Request $request) {
+            if ($request->is('api/*') || $request->expectsJson()) {
+                $handler = new \App\Exceptions\ApiExceptionHandler();
+                return $handler->render($request, $e);
+            }
+        });
     })->create();
 

@@ -6,33 +6,47 @@ use App\Enums\TenantRole;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\FormController;
 use App\Http\Controllers\Api\SubmissionController;
+use App\Http\Controllers\Api\V1\MeController;
+use App\Http\Controllers\Api\V1\PhotoController;
+use App\Http\Middleware\EnsureOperatorRole;
 use App\Http\Middleware\EnsureTenantApiAccess;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Stancl\Tenancy\Middleware\InitializeTenancyByPath;
 
-Route::prefix('{tenant}')
+Route::prefix('v1/{tenant}')
     ->middleware([InitializeTenancyByPath::class])
     ->group(function () {
-        Route::post('/auth/login', [AuthController::class, 'login']);
+        // Public routes
+        Route::middleware('throttle:5,1')->group(function () {
+            Route::post('/auth/login', [AuthController::class, 'login']);
+        });
 
+        // Authenticated routes
         Route::middleware(['auth:sanctum', EnsureTenantApiAccess::class])->group(function () {
-            Route::get('/forms', [FormController::class, 'index']);
-            Route::get('/forms/{form}', [FormController::class, 'show']);
-            Route::post('/submissions', [SubmissionController::class, 'store']);
-            Route::post('/submissions/{submission}/photos', [SubmissionController::class, 'uploadPhoto']);
-
-            Route::get('/me', function (Request $request) {
-                return response()->json([
-                    'id' => $request->user()->getKey(),
-                    'name' => $request->user()->name,
-                    'email' => $request->user()->email,
-                ]);
-            });
-
+            // Auth
+            Route::post('/auth/refresh', [AuthController::class, 'refresh'])->middleware('throttle:30,1');
             Route::post('/auth/logout', [AuthController::class, 'logout']);
 
-            Route::get('/admin/ping', function (Request $request) {
+            // Me
+            Route::get('/me', MeController::class);
+
+            // Forms
+            Route::get('/forms', [FormController::class, 'index'])->middleware('throttle:60,1');
+            Route::get('/forms/{form}', [FormController::class, 'show'])->middleware('throttle:60,1');
+
+            // Submissions
+            Route::get('/submissions', [SubmissionController::class, 'index'])->middleware('throttle:60,1');
+            Route::get('/submissions/{submission}', [SubmissionController::class, 'show'])->middleware('throttle:60,1');
+            Route::post('/submissions', [SubmissionController::class, 'store'])->middleware('throttle:60,1');
+            Route::patch('/submissions/{submission}', [SubmissionController::class, 'update'])->middleware('throttle:60,1');
+            Route::post('/submissions/{submission}/photos', [SubmissionController::class, 'uploadPhoto'])->middleware('throttle:60,1');
+
+            // Photos
+            Route::get('/submissions/{submission}/photos', [PhotoController::class, 'index'])->middleware('throttle:60,1');
+            Route::delete('/submissions/{submission}/photos/{media}', [PhotoController::class, 'destroy'])->middleware('throttle:60,1');
+
+            // Admin ping
+            Route::get('/admin/ping', function (\Illuminate\Http\Request $request) {
                 abort_unless($request->user()->hasRole(TenantRole::Admin->value), 403);
 
                 return response()->json(['ok' => true]);

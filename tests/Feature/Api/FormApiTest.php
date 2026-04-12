@@ -77,7 +77,7 @@ it('lists active forms with their current schema snapshot', function () {
     createPublishedForm($tenant, 'Checklist B', false);
 
     $this->withToken($token)
-        ->getJson('/api/forms-api-a/forms')
+        ->getJson('/api/v1/forms-api-a/forms')
         ->assertOk()
         ->assertJsonCount(1, 'data')
         ->assertJsonPath('data.0.name', 'Checklist A')
@@ -95,7 +95,7 @@ it('shows one form with the active version schema snapshot', function () {
     $published = createPublishedForm($tenant, 'Formulario detalle');
 
     $this->withToken($token)
-        ->getJson("/api/forms-api-b/forms/{$published['form_id']}")
+        ->getJson("/api/v1/forms-api-b/forms/{$published['form_id']}")
         ->assertOk()
         ->assertJsonPath('data.id', $published['form_id'])
         ->assertJsonPath('data.current_version.id', $published['version_id'])

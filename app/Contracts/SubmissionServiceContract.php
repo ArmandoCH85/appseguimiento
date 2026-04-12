@@ -13,4 +13,6 @@ interface SubmissionServiceContract
     public function createOrRetrieve(FormVersion $version, User $user, array $data): Submission;
 
     public function validateResponses(FormVersion $version, array $responses): array;
+
+    public function updateSubmission(Submission $submission, User $user, array $data): Submission;
 }

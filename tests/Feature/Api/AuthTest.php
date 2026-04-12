@@ -42,16 +42,16 @@ it('returns a sanctum token for valid tenant credentials', function () {
         'slug' => 'acme',
     ]);
 
-    $user = createTenantUser($tenant, 'admin');
+    $user = createTenantUser($tenant, 'operator');
 
-    $this->postJson('/api/acme/auth/login', [
+    $this->postJson('/api/v1/acme/auth/login', [
         'email' => $user['email'],
         'password' => 'password',
     ])
         ->assertOk()
         ->assertJsonStructure([
             'token',
-            'user' => ['id', 'name', 'email'],
+            'user' => ['id', 'name', 'email', 'role', 'assignments_count'],
         ]);
 });
 
@@ -68,16 +68,16 @@ it('rejects a token issued by another tenant', function () {
         'slug' => 'beta',
     ]);
 
-    $userA = createTenantUser($tenantA, 'admin');
-    createTenantUser($tenantB, 'admin');
+    $userA = createTenantUser($tenantA, 'operator');
+    createTenantUser($tenantB, 'operator');
 
-    $token = $this->postJson('/api/alpha/auth/login', [
+    $token = $this->postJson('/api/v1/alpha/auth/login', [
         'email' => $userA['email'],
         'password' => 'password',
     ])->json('token');
 
     $this->withToken($token)
-        ->getJson('/api/beta/me')
+        ->getJson('/api/v1/beta/me')
         ->assertUnauthorized();
 });
 
@@ -90,12 +90,14 @@ it('forbids operator access to admin-only endpoints', function () {
 
     $operator = createTenantUser($tenant, 'operator');
 
-    $token = $this->postJson('/api/gamma/auth/login', [
-        'email' => $operator['email'],
-        'password' => 'password',
-    ])->json('token');
+    // Create token directly since operator can't use login API
+    $token = $tenant->run(function () use ($operator) {
+        $userClass = \App\Models\Tenant\User::class;
+        $user = $userClass::query()->find($operator['id']);
+        return $user->createToken('mobile')->plainTextToken;
+    });
 
     $this->withToken($token)
-        ->getJson('/api/gamma/admin/ping')
+        ->getJson('/api/v1/gamma/admin/ping')
         ->assertForbidden();
 });

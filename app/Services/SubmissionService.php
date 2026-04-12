@@ -26,17 +26,22 @@ class SubmissionService implements SubmissionServiceContract
             return $existing;
         }
 
-        $responses = $this->validateResponses($version, $data['responses']);
+        $status = $data['status'] ?? SubmissionStatus::PendingPhotos->value;
+        $isDraft = $status === SubmissionStatus::Draft->value;
 
-        return DB::transaction(function () use ($version, $user, $data, $responses): Submission {
+        $responses = $isDraft
+            ? ($data['responses'] ?? [])
+            : $this->validateResponses($version, $data['responses'] ?? []);
+
+        return DB::transaction(function () use ($version, $user, $data, $responses, $status, $isDraft): Submission {
             $submission = Submission::query()->create([
                 'form_version_id' => $version->getKey(),
                 'user_id' => $user->getKey(),
                 'idempotency_key' => $data['idempotency_key'],
-                'latitude' => $data['latitude'],
-                'longitude' => $data['longitude'],
-                'status' => SubmissionStatus::PendingPhotos,
-                'submitted_at' => now(),
+                'latitude' => $data['latitude'] ?? null,
+                'longitude' => $data['longitude'] ?? null,
+                'status' => SubmissionStatus::from($status),
+                'submitted_at' => $isDraft ? null : now(),
             ]);
 
             foreach ($responses as $response) {
@@ -116,5 +121,53 @@ class SubmissionService implements SubmissionServiceContract
         }
 
         return (string) $value;
+    }
+
+    public function updateSubmission(Submission $submission, User $user, array $data): Submission
+    {
+        $validTransitions = [
+            SubmissionStatus::Draft->value => [SubmissionStatus::PendingPhotos->value],
+            SubmissionStatus::PendingPhotos->value => [SubmissionStatus::Draft->value],
+        ];
+
+        if (isset($data['status'])) {
+            $newStatus = SubmissionStatus::from($data['status']);
+            $allowed = $validTransitions[$submission->status->value] ?? [];
+
+            if (! in_array($newStatus->value, $allowed, true)) {
+                throw ValidationException::withMessages([
+                    'status' => ['Transición de estado no permitida.'],
+                ]);
+            }
+
+            $submission->status = $newStatus;
+
+            if ($newStatus === SubmissionStatus::PendingPhotos && $submission->submitted_at === null) {
+                $submission->submitted_at = now();
+            }
+        }
+
+        if (array_key_exists('latitude', $data)) {
+            $submission->latitude = $data['latitude'];
+        }
+
+        if (array_key_exists('longitude', $data)) {
+            $submission->longitude = $data['longitude'];
+        }
+
+        if (array_key_exists('responses', $data) && is_array($data['responses'])) {
+            $submission->responses()->delete();
+
+            $version = $submission->formVersion;
+            $responses = $this->validateResponses($version, $data['responses']);
+
+            foreach ($responses as $response) {
+                $submission->responses()->create($response);
+            }
+        }
+
+        $submission->save();
+
+        return $submission->load('responses');
     }
 }

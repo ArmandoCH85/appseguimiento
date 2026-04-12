@@ -20,11 +20,11 @@ afterEach(fn () => dropCurrentTestTenantDatabases());
 function createSubmissionToken(Tenant $tenant): string
 {
     return $tenant->run(function () {
-        $role = Role::findOrCreate('operator', 'web');
+        $role = Role::findOrCreate('admin', 'web');
 
         $user = User::query()->create([
-            'name' => 'Operator',
-            'email' => 'operator@example.com',
+            'name' => 'Admin User',
+            'email' => 'admin@example.com',
             'password' => Hash::make('password'),
             'is_active' => true,
         ]);
@@ -70,9 +70,10 @@ it('creates a submission with server timestamp', function () {
     $versionId = createSubmissionFormVersion($tenant);
 
     $response = $this->withToken($token)
-        ->postJson('/api/submission-a/submissions', [
+        ->postJson('/api/v1/submission-a/submissions', [
             'form_version_id' => $versionId,
             'idempotency_key' => 'abc-123',
+            'status' => 'pending_photos',
             'latitude' => -12.046374,
             'longitude' => -77.042793,
             'responses' => [
@@ -99,9 +100,10 @@ it('rejects a submission without gps coordinates', function () {
     $versionId = createSubmissionFormVersion($tenant);
 
     $this->withToken($token)
-        ->postJson('/api/submission-b/submissions', [
+        ->postJson('/api/v1/submission-b/submissions', [
             'form_version_id' => $versionId,
             'idempotency_key' => 'missing-gps',
+            'status' => 'pending_photos',
             'responses' => [
                 'observacion' => 'Sin GPS',
             ],
@@ -123,6 +125,7 @@ it('returns the original submission when the idempotency key is reused', functio
     $payload = [
         'form_version_id' => $versionId,
         'idempotency_key' => 'same-key',
+        'status' => 'pending_photos',
         'latitude' => -12.046374,
         'longitude' => -77.042793,
         'responses' => [
@@ -131,12 +134,12 @@ it('returns the original submission when the idempotency key is reused', functio
     ];
 
     $first = $this->withToken($token)
-        ->postJson('/api/submission-c/submissions', $payload)
+        ->postJson('/api/v1/submission-c/submissions', $payload)
         ->assertCreated()
         ->json('data');
 
     $second = $this->withToken($token)
-        ->postJson('/api/submission-c/submissions', array_merge($payload, [
+        ->postJson('/api/v1/submission-c/submissions', array_merge($payload, [
             'responses' => ['observacion' => 'Segunda'],
         ]))
         ->assertOk()

@@ -40,6 +40,14 @@ class Submission extends Model implements HasMedia
         ];
     }
 
+    /**
+     * Determine if this submission is a draft.
+     */
+    public function isDraft(): bool
+    {
+        return $this->status === SubmissionStatus::Draft;
+    }
+
     public function formVersion(): BelongsTo
     {
         return $this->belongsTo(FormVersion::class);

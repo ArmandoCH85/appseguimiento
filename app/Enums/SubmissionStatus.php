@@ -6,6 +6,7 @@ namespace App\Enums;
 
 enum SubmissionStatus: string
 {
+    case Draft = 'draft';
     case PendingPhotos = 'pending_photos';
     case Complete = 'complete';
 }

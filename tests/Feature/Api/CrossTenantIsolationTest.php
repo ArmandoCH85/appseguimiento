@@ -20,10 +20,10 @@ afterEach(fn () => dropCurrentTestTenantDatabases());
 function createIsolationToken(Tenant $tenant): string
 {
     return $tenant->run(function () {
-        $role = Role::findOrCreate('operator', 'web');
+        $role = Role::findOrCreate('admin', 'web');
 
         $user = User::query()->create([
-            'name' => 'Isolation User',
+            'name' => 'Isolation Admin',
             'email' => 'isolation@example.com',
             'password' => Hash::make('password'),
             'is_active' => true,
@@ -76,9 +76,10 @@ it('rejects a tenant token used against another tenant submission endpoint', fun
     $versionB = createIsolationVersion($tenantB);
 
     $this->withToken($tokenA)
-        ->postJson('/api/iso-b/submissions', [
+        ->postJson('/api/v1/iso-b/submissions', [
             'form_version_id' => $versionB,
             'idempotency_key' => 'cross-tenant',
+            'status' => 'pending_photos',
             'latitude' => -12.046374,
             'longitude' => -77.042793,
             'responses' => [

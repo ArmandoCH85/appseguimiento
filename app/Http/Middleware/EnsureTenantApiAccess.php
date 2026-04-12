@@ -15,10 +15,41 @@ class EnsureTenantApiAccess
     {
         $user = $request->user();
 
-        abort_unless(tenant() !== null, Response::HTTP_UNAUTHORIZED);
-        abort_unless($user instanceof User, Response::HTTP_UNAUTHORIZED);
-        abort_unless($user->currentAccessToken() !== null, Response::HTTP_UNAUTHORIZED);
-        abort_if(! $user->is_active, Response::HTTP_FORBIDDEN);
+        if (tenant() === null) {
+            return response()->json([
+                'error' => [
+                    'code' => 'UNAUTHORIZED',
+                    'message' => 'No autenticado o sesión expirada.',
+                ],
+            ], Response::HTTP_UNAUTHORIZED);
+        }
+
+        if (! $user instanceof User) {
+            return response()->json([
+                'error' => [
+                    'code' => 'UNAUTHORIZED',
+                    'message' => 'No autenticado o sesión expirada.',
+                ],
+            ], Response::HTTP_UNAUTHORIZED);
+        }
+
+        if ($user->currentAccessToken() === null) {
+            return response()->json([
+                'error' => [
+                    'code' => 'UNAUTHORIZED',
+                    'message' => 'No autenticado o sesión expirada.',
+                ],
+            ], Response::HTTP_UNAUTHORIZED);
+        }
+
+        if (! $user->is_active) {
+            return response()->json([
+                'error' => [
+                    'code' => 'NOT_AUTHORIZED',
+                    'message' => 'Usuario inactivo.',
+                ],
+            ], Response::HTTP_FORBIDDEN);
+        }
 
         return $next($request);
     }
