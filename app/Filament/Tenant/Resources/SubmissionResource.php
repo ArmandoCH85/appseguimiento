@@ -255,18 +255,22 @@ class SubmissionResource extends Resource
      */
     protected static function buildFileEntry(string $label, ?string $value, Submission $submission): TextEntry
     {
+        $allMedia = $submission->getMedia('submissions');
+
         if (empty($value)) {
-            return TextEntry::make('response_'.$label)
-                ->label($label)
-                ->state('Sin archivo')
-                ->placeholder('Sin archivo');
+            if ($allMedia->isEmpty()) {
+                return TextEntry::make('response_'.$label)
+                    ->label($label)
+                    ->state('Sin archivo')
+                    ->placeholder('Sin archivo');
+            }
+
+            $value = json_encode($allMedia->pluck('file_name')->toArray());
         }
 
-        // Detectar si es un array JSON (múltiples archivos)
         $decoded = json_decode($value, true);
         $fileNames = is_array($decoded) ? $decoded : [$value];
 
-        $allMedia = $submission->getMedia('submissions');
         $htmlParts = [];
 
         foreach ($fileNames as $fileName) {
