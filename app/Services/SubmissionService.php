@@ -73,13 +73,16 @@ class SubmissionService implements SubmissionServiceContract
         foreach ($snapshot as $fieldName => $field) {
             $fieldRules = $field['validation_rules'] ?? [];
 
-            if (($field['is_required'] ?? false) === true) {
+            $type = $field['type'] ?? null;
+
+            // File uploads are handled separately via POST /photos
+            if ($type === 'file') {
+                array_unshift($fieldRules, 'nullable');
+            } elseif (($field['is_required'] ?? false) === true) {
                 array_unshift($fieldRules, 'required');
             } else {
                 array_unshift($fieldRules, 'nullable');
             }
-
-            $type = $field['type'] ?? null;
 
             if ($type === 'number') {
                 $fieldRules[] = 'numeric';
