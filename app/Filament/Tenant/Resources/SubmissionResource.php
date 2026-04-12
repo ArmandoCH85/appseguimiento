@@ -253,7 +253,7 @@ class SubmissionResource extends Resource
      * Construye una entrada con enlace de descarga para archivos.
      * Soporta archivos simples o múltiples (JSON array).
      */
-    protected static function buildFileEntry(string $label, string $value, Submission $submission): TextEntry
+    protected static function buildFileEntry(string $label, ?string $value, Submission $submission): TextEntry
     {
         if (empty($value)) {
             return TextEntry::make('response_'.$label)
