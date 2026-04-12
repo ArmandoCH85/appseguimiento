@@ -123,7 +123,7 @@ class SubmissionController extends Controller
         $disk = 'local';
         $path = $file->store("tmp/submissions/{$submission->getKey()}", $disk);
 
-        ProcessPhotoJob::dispatch(
+        ProcessPhotoJob::dispatchSync(
             tenant()->getTenantKey(),
             $submission->getKey(),
             $disk,
