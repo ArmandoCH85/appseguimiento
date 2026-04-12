@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Capa_1" data-name="Capa 1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1458.66 1292.52">
+  <defs>
+    <clipPath id="clippath">
+      <circle cx="810.26" cy="816.29" r="472.06" fill="none"/>
+    </clipPath>
+    <radialGradient id="Degradado_sin_nombre_2" data-name="Degradado sin nombre 2" cx="-148.41" cy="276.01" fx="-148.41" fy="276.01" r=".7" gradientTransform="translate(265370.92 127043.11) rotate(90) scale(850.5 958.5)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#444"/>
+      <stop offset=".6" stop-color="#333"/>
+      <stop offset="1" stop-color="#222"/>
+    </radialGradient>
+    <linearGradient id="Degradado_sin_nombre_31" data-name="Degradado sin nombre 31" x1="35.54" y1="307.87" x2="617.53" y2="657.07" gradientTransform="translate(102.3 147.12) rotate(-26.01) scale(1.35)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#555"/>
+      <stop offset=".45" stop-color="#999"/>
+      <stop offset="1" stop-color="#eee"/>
+    </linearGradient>
+    <linearGradient id="Degradado_sin_nombre" data-name="Degradado sin nombre" x1="413.1" y1="467.34" x2="851.39" y2="467.34" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#16a6db"/>
+      <stop offset="1" stop-color="#0da4dd"/>
+    </linearGradient>
+    <linearGradient id="Degradado_sin_nombre-2" data-name="Degradado sin nombre" x1="-1583.46" y1="1263.11" x2="-1145.16" y2="1263.11" gradientTransform="translate(-418.1 2395.09) rotate(-178.51)" xlink:href="#Degradado_sin_nombre"/>
+  </defs>
+  <circle cx="809.66" cy="816.96" r="471.94" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="2"/>
+  <g clip-path="url(#clippath)">
+    <g>
+      <ellipse cx="816.29" cy="816.29" rx="481.55" ry="427.29" transform="translate(-221.18 1322.58) rotate(-71.01)" fill="url(#Degradado_sin_nombre_2)"/>
+      <path d="M255.81,1059.62c252.32-480.82,786.73-640.88,1202.85-219.73L1097.16,0,0,535.42l255.81,524.2Z" fill="url(#Degradado_sin_nombre_31)"/>
+      <circle cx="816.29" cy="816.29" r="469.34" fill="none" stroke="rgba(255, 255, 255, .08)" stroke-miterlimit="5.4" stroke-width="2.7"/>
+    </g>
+  </g>
+  <g>
+    <path d="M409.45,908.11v-264.18h190.59s142.6,17.37,142.6,197.45c0,0-4.57,146.26-125.23,176.42h-207.96v-68.99h159.51s90.5-8.71,86.84-100.12c0,0,10.51-131.63-79.76-130.72h-80.21v191.96s-85.24-2.97-86.38-1.83Z" fill="#fefefe"/>
+    <path d="M877.94,1022.37v-378.44h212.07s92.27,11.88,91.84,106.95c0,0,5.97,72.21-47.05,90.5,0,0,50.28,26.51,51.19,68.56v112.44h-87.75v-109.69s-10.06-36.56-38.39-35.65h-54.85v-64.9h55.76s44.79-4.57,44.79-50.28c0,0,2.74-51.19-45.71-51.19h-95.76v311.71s-84.78-1.37-86.15,0Z" fill="#fff"/>
+    <circle cx="810.29" cy="841.93" r="41.5" fill="#fff"/>
+  </g>
+  <path d="M413.1,582.05s121.05-249.41,438.29-228.13c0,0-263.38,30.59-438.29,228.13Z" fill="url(#Degradado_sin_nombre)"/>
+  <path d="M1200.67,1058.94s-127.5,246.17-444.08,216.64c0,0,264.08-23.73,444.08-216.64Z" fill="url(#Degradado_sin_nombre-2)"/>
+</svg>
