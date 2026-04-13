@@ -8,7 +8,6 @@ use App\Filament\Tenant\Resources\GpsTrackResource\Pages;
 use App\Models\Tenant\Device;
 use App\Models\Tenant\GpsTrack;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Select;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
@@ -17,7 +16,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
-use Illuminate\Support\HtmlString;
+use Illuminate\Support\Carbon;
 
 class GpsTrackResource extends Resource
 {
@@ -41,31 +40,45 @@ class GpsTrackResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('device.imei')
-                    ->label('IMEI')
+                    ->label('Dispositivo')
+                    ->icon('heroicon-m-device-phone-mobile')
+                    ->description(fn (GpsTrack $record): string => $record->device?->user?->name ?? 'Sin usuario asignado')
                     ->searchable()
                     ->copyable()
                     ->sortable(),
-                TextColumn::make('device.user.name')
-                    ->label('Usuario')
-                    ->searchable()
-                    ->sortable(),
+
                 TextColumn::make('latitude')
-                    ->label('Latitud')
-                    ->sortable(),
-                TextColumn::make('longitude')
-                    ->label('Longitud')
-                    ->sortable(),
-                TextColumn::make('time')
-                    ->label('Timestamp GPS')
-                    ->formatStateUsing(fn (int $state): string => now()->setTimestamp((int) ($state / 1000))->setTimezone('America/Lima')->format('d/m/Y H:i:s'))
-                    ->sortable(),
+                    ->label('Coordenadas')
+                    ->icon('heroicon-m-map-pin')
+                    ->formatStateUsing(fn (string $state): string => number_format((float) $state, 6))
+                    ->description(fn (GpsTrack $record): string => 'Lng: ' . number_format((float) $record->longitude, 6))
+                    ->copyable()
+                    ->copyableState(fn (GpsTrack $record): string => "{$record->latitude},{$record->longitude}"),
+
                 TextColumn::make('accuracy')
                     ->label('Precisión')
+                    ->icon('heroicon-m-signal')
                     ->formatStateUsing(fn (int $state): string => "{$state} m")
+                    ->badge()
+                    ->color(fn (int $state): string => match (true) {
+                        $state <= 20  => 'success',
+                        $state <= 100 => 'warning',
+                        default       => 'danger',
+                    })
                     ->sortable(),
+
+                TextColumn::make('time')
+                    ->label('Hora GPS')
+                    ->icon('heroicon-m-clock')
+                    ->formatStateUsing(fn (int $state): string => Carbon::createFromTimestampMs($state)->setTimezone('America/Lima')->format('d/m/Y H:i:s'))
+                    ->description(fn (GpsTrack $record): string => Carbon::createFromTimestampMs($record->time)->setTimezone('America/Lima')->diffForHumans())
+                    ->sortable(),
+
                 TextColumn::make('created_at')
                     ->label('Registrado')
+                    ->icon('heroicon-m-server')
                     ->dateTime('d/m/Y H:i:s', timezone: 'America/Lima')
+                    ->description(fn (GpsTrack $record): string => $record->created_at->setTimezone('America/Lima')->diffForHumans())
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
@@ -75,11 +88,12 @@ class GpsTrackResource extends Resource
                     ->options(fn (): array => Device::query()
                         ->with('user')
                         ->get()
-                        ->pluck('imei', 'id')
+                        ->mapWithKeys(fn (Device $d) => [$d->id => $d->imei . ($d->user ? ' · ' . $d->user->name : '')])
                         ->all()
                     )
                     ->searchable()
                     ->preload(),
+
                 Filter::make('time_range')
                     ->label('Rango de tiempo')
                     ->form([
@@ -93,12 +107,10 @@ class GpsTrackResource extends Resource
                     ->query(function ($query, array $data) {
                         return $query
                             ->when($data['desde'] ?? null, function ($q, $date) {
-                                $from = now()->parse($date)->startOfDay()->timestamp * 1000;
-                                $q->where('time', '>=', $from);
+                                $q->where('time', '>=', now()->parse($date)->startOfDay()->timestamp * 1000);
                             })
                             ->when($data['hasta'] ?? null, function ($q, $date) {
-                                $to = now()->parse($date)->endOfDay()->timestamp * 1000;
-                                $q->where('time', '<=', $to);
+                                $q->where('time', '<=', now()->parse($date)->endOfDay()->timestamp * 1000);
                             });
                     }),
             ])
@@ -108,48 +120,81 @@ class GpsTrackResource extends Resource
     public static function infolist(Schema $schema): Schema
     {
         return $schema->schema([
-            Section::make('Datos del dispositivo')
+            Section::make('Dispositivo')
                 ->icon('heroicon-o-device-phone-mobile')
+                ->description('Información del equipo y su usuario asignado')
                 ->schema([
                     TextEntry::make('device.imei')
                         ->label('IMEI')
+                        ->icon('heroicon-m-device-phone-mobile')
                         ->copyable(),
                     TextEntry::make('device.user.name')
                         ->label('Usuario asignado')
+                        ->icon('heroicon-m-user')
                         ->placeholder('Sin usuario'),
                     TextEntry::make('device.user.email')
-                        ->label('Email del usuario')
-                        ->placeholder('Sin email'),
+                        ->label('Email')
+                        ->icon('heroicon-m-envelope')
+                        ->placeholder('Sin email')
+                        ->copyable(),
                 ])
                 ->columns(3),
 
             Section::make('Ubicación')
                 ->icon('heroicon-o-map-pin')
+                ->description('Coordenadas reportadas por el dispositivo')
                 ->schema([
                     TextEntry::make('latitude')
-                        ->label('Latitud'),
+                        ->label('Latitud')
+                        ->icon('heroicon-m-arrows-up-down')
+                        ->copyable(),
                     TextEntry::make('longitude')
-                        ->label('Longitud'),
+                        ->label('Longitud')
+                        ->icon('heroicon-m-arrows-right-left')
+                        ->copyable(),
                     TextEntry::make('accuracy')
                         ->label('Precisión')
-                        ->formatStateUsing(fn (int $state): string => "{$state} metros"),
+                        ->icon('heroicon-m-signal')
+                        ->formatStateUsing(fn (int $state): string => "{$state} metros")
+                        ->badge()
+                        ->color(fn (int $state): string => match (true) {
+                            $state <= 20  => 'success',
+                            $state <= 100 => 'warning',
+                            default       => 'danger',
+                        }),
                 ])
                 ->columns(3),
 
             Section::make('Tiempos')
                 ->icon('heroicon-o-clock')
+                ->description('Marcas de tiempo en zona horaria América/Lima')
                 ->schema([
                     TextEntry::make('time')
-                        ->label('Timestamp GPS (epoch ms)')
-                        ->formatStateUsing(fn (int $state): string => now()->setTimestamp((int) ($state / 1000))->setTimezone('America/Lima')->format('d/m/Y H:i:s')),
+                        ->label('Hora GPS')
+                        ->icon('heroicon-m-clock')
+                        ->formatStateUsing(fn (int $state): string => Carbon::createFromTimestampMs($state)->setTimezone('America/Lima')->format('d/m/Y H:i:s'))
+                        ->helperText(fn (GpsTrack $record): string => Carbon::createFromTimestampMs($record->time)->setTimezone('America/Lima')->diffForHumans()),
                     TextEntry::make('elapsed_realtime_millis')
-                        ->label('Elapsed Realtime (ms desde boot)')
-                        ->formatStateUsing(fn (int $state): string => number_format($state).' ms'),
+                        ->label('Tiempo desde boot')
+                        ->icon('heroicon-m-arrow-path')
+                        ->formatStateUsing(function (int $state): string {
+                            $seconds = (int) ($state / 1000);
+                            $h = intdiv($seconds, 3600);
+                            $m = intdiv($seconds % 3600, 60);
+                            $s = $seconds % 60;
+
+                            return $h > 0
+                                ? "{$h}h {$m}m {$s}s"
+                                : ($m > 0 ? "{$m}m {$s}s" : "{$s}s");
+                        })
+                        ->helperText('Tiempo transcurrido desde el último reinicio del dispositivo'),
                     TextEntry::make('created_at')
                         ->label('Registrado en sistema')
-                        ->dateTime('d/m/Y H:i:s', timezone: 'America/Lima'),
+                        ->icon('heroicon-m-server')
+                        ->dateTime('d/m/Y H:i:s', timezone: 'America/Lima')
+                        ->helperText(fn (GpsTrack $record): string => $record->created_at->setTimezone('America/Lima')->diffForHumans()),
                 ])
-                ->columns(2),
+                ->columns(3),
         ]);
     }
 
@@ -157,8 +202,7 @@ class GpsTrackResource extends Resource
     {
         return [
             'index' => Pages\ListGpsTracks::route('/'),
-            'view' => Pages\ViewGpsTrack::route('/{record}'),
+            'view'  => Pages\ViewGpsTrack::route('/{record}'),
         ];
     }
-
 }
