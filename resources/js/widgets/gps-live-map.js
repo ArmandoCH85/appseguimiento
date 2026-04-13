@@ -41,7 +41,7 @@ class GpsLiveMap {
             opacity: 0.8,
         }).addTo(this.map);
 
-        this.connectWebSocket();
+        // WebSocket desactivado — usar polling o Reverb cuando esté configurado
     }
 
     connectWebSocket() {

@@ -14,6 +14,29 @@ class GpsLiveMapWidget extends Widget
 
     protected int|string|array $columnSpan = 'full';
 
+    public ?string $selectedDeviceId = null;
+
+    public function mount(): void
+    {
+        $this->selectedDeviceId = request()->query('device_id');
+    }
+
+    public function refreshPoints(): void
+    {
+        if (! $this->selectedDeviceId) {
+            return;
+        }
+
+        $points = GpsTrack::query()
+            ->where('device_id', $this->selectedDeviceId)
+            ->orderBy('time')
+            ->limit(500)
+            ->get()
+            ->toArray();
+
+        $this->dispatch('gps-points-updated', points: $points);
+    }
+
     protected function getViewData(): array
     {
         $devices = Device::query()
@@ -21,12 +44,10 @@ class GpsLiveMapWidget extends Widget
             ->orderBy('imei')
             ->get();
 
-        $selectedDeviceId = request()->query('device_id');
-
         $initialPoints = [];
-        if ($selectedDeviceId) {
+        if ($this->selectedDeviceId) {
             $initialPoints = GpsTrack::query()
-                ->where('device_id', $selectedDeviceId)
+                ->where('device_id', $this->selectedDeviceId)
                 ->orderBy('time')
                 ->limit(500)
                 ->get()
@@ -34,10 +55,10 @@ class GpsLiveMapWidget extends Widget
         }
 
         return [
-            'devices' => $devices,
-            'selectedDeviceId' => $selectedDeviceId,
-            'initialPoints' => $initialPoints,
-            'tenantId' => tenant()->getTenantKey(),
+            'devices'          => $devices,
+            'selectedDeviceId' => $this->selectedDeviceId,
+            'initialPoints'    => $initialPoints,
+            'tenantId'         => tenant()->getTenantKey(),
         ];
     }
 }
