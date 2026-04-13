@@ -58,6 +58,11 @@ class GpsRouteReportPage extends Page
 
     public bool $reportGenerated = false;
 
+    // Pagination
+    public int $perPage = 20;
+
+    public int $currentPage = 1;
+
     public function mount(): void
     {
         abort_unless(static::canAccess(), 403);
@@ -65,6 +70,62 @@ class GpsRouteReportPage extends Page
         $today = now()->setTimezone('America/Lima')->format('Y-m-d');
         $this->startDate = $today;
         $this->endDate = $today;
+    }
+
+    public function updatedSelectedDeviceId(): void
+    {
+        $this->generateReport();
+    }
+
+    public function updatedDateFilter(): void
+    {
+        if (filled($this->selectedDeviceId)) {
+            $this->generateReport();
+        }
+    }
+
+    public function updatedStartDate(): void
+    {
+        if (filled($this->selectedDeviceId) && $this->dateFilter === 'custom') {
+            $this->generateReport();
+        }
+    }
+
+    public function updatedEndDate(): void
+    {
+        if (filled($this->selectedDeviceId) && $this->dateFilter === 'custom') {
+            $this->generateReport();
+        }
+    }
+
+    public function goToPage(int $page): void
+    {
+        $this->currentPage = $page;
+    }
+
+    public function nextPage(): void
+    {
+        if ($this->currentPage < $this->getTotalPages()) {
+            $this->currentPage++;
+        }
+    }
+
+    public function previousPage(): void
+    {
+        if ($this->currentPage > 1) {
+            $this->currentPage--;
+        }
+    }
+
+    public function getPaginatedPoints(): array
+    {
+        $offset = ($this->currentPage - 1) * $this->perPage;
+        return array_slice($this->reportPoints, $offset, $this->perPage);
+    }
+
+    public function getTotalPages(): int
+    {
+        return (int) ceil(count($this->reportPoints) / $this->perPage);
     }
 
     public static function canAccess(): bool

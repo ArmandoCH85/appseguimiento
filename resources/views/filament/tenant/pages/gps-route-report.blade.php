@@ -268,7 +268,7 @@
                     </div>
                 </div>
 
-                <div class="gps-report-card relative">
+                <div class="gps-report-card relative" x-data="{ mapReady: false }" x-init="setTimeout(() => { if (window.__gpsReportState?.points?.length && !window.__gpsReportMap) { renderMap(); } }, 100)">
                     <div wire:ignore>
                         <div id="gps-report-map"></div>
                     </div>
@@ -341,11 +341,12 @@
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-200 dark:divide-white/10">
-                                    @foreach($reportPoints as $point)
-                                        <tr class="@if($loop->first)bg-emerald-50/80 dark:bg-emerald-500/10 @endif hover:bg-gray-50 dark:hover:bg-white/[0.02]">
+                                    @foreach($this->getPaginatedPoints() as $index => $point)
+                                        @php $globalIndex = ($currentPage - 1) * $perPage + $index + 1; @endphp
+                                        <tr class="@if($loop->first && $currentPage === 1)bg-emerald-50/80 dark:bg-emerald-500/10 @endif hover:bg-gray-50 dark:hover:bg-white/[0.02]">
                                             <td class="whitespace-nowrap px-4 py-2.5 font-medium text-gray-950 dark:text-white">
-                                                {{ $point['index'] }}
-                                                @if($loop->first)
+                                                {{ $globalIndex }}
+                                                @if($globalIndex === 1)
                                                     <x-filament::badge size="xs" color="success" class="ml-1">Inicio</x-filament::badge>
                                                 @endif
                                             </td>
@@ -371,6 +372,30 @@
                                 </tbody>
                             </table>
                         </div>
+
+                        {{-- Pagination Controls --}}
+                        @if($this->getTotalPages() > 1)
+                            <div class="flex items-center justify-between border-t border-gray-200 px-4 py-3 dark:border-white/10">
+                                <div class="text-sm text-gray-600 dark:text-gray-400">
+                                    Mostrando {{ ($currentPage - 1) * $perPage + 1 }}–{{ min($currentPage * $perPage, count($reportPoints)) }} de {{ count($reportPoints) }} puntos
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <x-filament::button size="sm" color="gray" outlined wire:click="previousPage" :disabled="$currentPage <= 1">
+                                        Anterior
+                                    </x-filament::button>
+
+                                    @for($i = max(1, $currentPage - 2); $i <= min($this->getTotalPages(), $currentPage + 2); $i++)
+                                        <x-filament::button size="sm" :color="$i === $currentPage ? 'primary' : 'gray'" :outlined="$i !== $currentPage" wire:click="goToPage({{ $i }})">
+                                            {{ $i }}
+                                        </x-filament::button>
+                                    @endfor
+
+                                    <x-filament::button size="sm" color="gray" outlined wire:click="nextPage" :disabled="$currentPage >= $this->getTotalPages()">
+                                        Siguiente
+                                    </x-filament::button>
+                                </div>
+                            </div>
+                        @endif
                     </div>
                 @else
                     <div class="rounded-lg border border-gray-200/80 p-8 text-center dark:border-white/10">
@@ -398,7 +423,7 @@
                     .filter((coords) => !Number.isNaN(coords[0]) && !Number.isNaN(coords[1]));
             }
 
-            function pointMarkerIcon(isStart) {
+            function pointMarkerIcon() {
                 const phoneSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
                     <path d="M10.5 1.5H8.25C7.007 1.5 6 2.507 6 3.75v16.5c0 1.243 1.007 2.25 2.25 2.25h7.5c1.243 0 2.25-1.007 2.25-2.25V3.75c0-1.243-1.007-2.25-2.25-2.25H13.5m-6 0V3h9V1.5m-9 0h9m-3.75 4.5v3m-3 0h6"/>
                 </svg>`;
@@ -424,6 +449,12 @@
                 const points = window.__gpsReportState.points || [];
                 const coords = toCoords(points);
 
+                // Destroy existing map if present
+                if (window.__gpsReportMap) {
+                    window.__gpsReportMap.remove();
+                    window.__gpsReportMap = null;
+                }
+
                 if (!coords.length) return;
 
                 const map = L.map('gps-report-map', { zoomControl: true }).setView(coords[0], 14);
@@ -446,7 +477,7 @@
                 L.marker(coords[0], { icon: startMarkerIcon() }).addTo(map);
 
                 // End marker (last point with phone icon)
-                const lastMarker = L.marker(coords[coords.length - 1], { icon: pointMarkerIcon(false) }).addTo(map);
+                L.marker(coords[coords.length - 1], { icon: pointMarkerIcon() }).addTo(map);
 
                 // Fit bounds
                 if (coords.length > 1) {
@@ -454,8 +485,14 @@
                 } else {
                     map.setView(coords[0], 16);
                 }
+
+                window.__gpsReportMap = map;
             }
 
+            // Make renderMap available globally
+            window.renderGpsReportMap = renderMap;
+
+            // Initial render
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', () => {
                     if (window.__gpsReportState.points?.length) {
@@ -468,5 +505,21 @@
                 }
             }
         })();
+    </script>
+
+    {{-- Hidden element with current state for JS to read --}}
+    <script type="application/json" id="__gpsReportState" style="display:none;">
+        @json($reportPoints)
+    </script>
+
+    {{-- Trigger map render after Livewire update --}}
+    <script>
+        if (window.__gpsReportState?.points?.length && !window.__gpsReportMap) {
+            setTimeout(() => {
+                if (typeof window.renderGpsReportMap === 'function') {
+                    window.renderGpsReportMap();
+                }
+            }, 200);
+        }
     </script>
 </x-filament-panels::page>
