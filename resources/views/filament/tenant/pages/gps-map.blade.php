@@ -58,6 +58,7 @@
     (function () {
         var initialPoints   = @json($initialPoints);
         var deviceName      = @json($selectedDeviceName);
+        var lastUpdatedAt   = @json($lastUpdatedAt ?? '');
 
         function toCoords(points) {
             return points
@@ -86,13 +87,9 @@
         }
 
         function popupContent() {
-            var now = new Date().toLocaleString('es-AR', {
-                day: '2-digit', month: '2-digit', year: 'numeric',
-                hour: '2-digit', minute: '2-digit', second: '2-digit',
-            });
             return '<div style="font-family:sans-serif;min-width:160px;">' +
                    '  <div style="font-weight:600;margin-bottom:4px;">📱 ' + deviceName + '</div>' +
-                   '  <div style="font-size:12px;color:#6b7280;">🕐 ' + now + '</div>' +
+                   '  <div style="font-size:12px;color:#6b7280;">🕐 ' + lastUpdatedAt + '</div>' +
                    '</div>';
         }
 
@@ -149,7 +146,8 @@
         }
 
         window.addEventListener('gps-points-updated', function (e) {
-            if (e.detail.deviceName) deviceName = e.detail.deviceName;
+            if (e.detail.deviceName) deviceName    = e.detail.deviceName;
+            if (e.detail.updatedAt)  lastUpdatedAt = e.detail.updatedAt;
             updateMap(e.detail.points);
         });
 

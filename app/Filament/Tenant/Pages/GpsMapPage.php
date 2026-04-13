@@ -35,14 +35,18 @@ class GpsMapPage extends Page
         $this->selectedDeviceId = request()->query('device_id');
 
         if ($this->selectedDeviceId) {
-            $this->lastUpdatedAt = now()->format('H:i:s');
+            $this->lastUpdatedAt = $this->limaTime();
         }
     }
 
     public function updatedSelectedDeviceId(): void
     {
-        $this->lastUpdatedAt = now()->format('H:i:s');
-        $this->dispatch('gps-points-updated', points: $this->getPoints(), deviceName: $this->getSelectedDeviceName());
+        $this->lastUpdatedAt = $this->limaTime();
+        $this->dispatch('gps-points-updated',
+            points:     $this->getPoints(),
+            deviceName: $this->getSelectedDeviceName(),
+            updatedAt:  $this->lastUpdatedAt,
+        );
     }
 
     public function refreshPoints(): void
@@ -51,8 +55,17 @@ class GpsMapPage extends Page
             return;
         }
 
-        $this->lastUpdatedAt = now()->format('H:i:s');
-        $this->dispatch('gps-points-updated', points: $this->getPoints(), deviceName: $this->getSelectedDeviceName());
+        $this->lastUpdatedAt = $this->limaTime();
+        $this->dispatch('gps-points-updated',
+            points:     $this->getPoints(),
+            deviceName: $this->getSelectedDeviceName(),
+            updatedAt:  $this->lastUpdatedAt,
+        );
+    }
+
+    private function limaTime(): string
+    {
+        return now()->setTimezone('America/Lima')->format('d/m/Y H:i:s');
     }
 
     private function getSelectedDeviceName(): string
