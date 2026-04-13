@@ -257,6 +257,8 @@ class GpsRouteReportPage extends Page
         $this->durationFormatted = $reportService->formatDuration($duration);
         $this->reportGenerated = $points->count() > 0;
 
+        $this->dispatch('gps-report-generated');
+
         // First and last time
         if ($points->count() > 0) {
             $this->firstTimeFormatted = now()

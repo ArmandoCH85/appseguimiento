@@ -553,6 +553,25 @@
                     }
                 }, 0);
             }
+
+            // Listen for Livewire event after report generation
+            document.addEventListener('livewire:initialized', function () {
+                Livewire.on('gps-report-generated', function () {
+                    setTimeout(function () {
+                        if (window.L) {
+                            // Destroy and recreate map
+                            if (window.__gpsReportMap) {
+                                window.__gpsReportMap.remove();
+                                window.__gpsReportMap = null;
+                                window.__gpsReportPath = null;
+                                window.__gpsReportStartMarker = null;
+                                window.__gpsReportEndMarker = null;
+                            }
+                            bootMap();
+                        }
+                    }, 300);
+                });
+            });
         })();
     </script>
 </x-filament-panels::page>
