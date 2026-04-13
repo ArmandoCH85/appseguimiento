@@ -6,6 +6,8 @@ namespace App\Providers\Filament;
 
 use App\Http\Middleware\InitializeTenancyByDomainIfApplicable;
 use Filament\Http\Middleware\Authenticate;
+use Filament\Support\Assets\Js;
+use Illuminate\Support\Facades\Vite;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -58,6 +60,9 @@ class TenantPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
+            ])
+            ->assets([
+                Js::make('app-js', Vite::asset('resources/js/app.js')),
             ])
             ->authMiddleware([
                 Authenticate::class,

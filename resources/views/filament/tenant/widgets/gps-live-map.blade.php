@@ -26,9 +26,6 @@
 
             <script>
                 function initGpsMap() {
-                    if (window.__gpsMapInitialized) return;
-                    window.__gpsMapInitialized = true;
-
                     import('{{ Vite::asset("resources/js/widgets/gps-live-map.js") }}').then(module => {
                         const GpsLiveMap = module.default;
                         const map = new GpsLiveMap('gps-map', {

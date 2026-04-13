@@ -54,9 +54,9 @@ class GpsLiveMap {
             return;
         }
 
-        const channelName = `private-gps.tenant.${this.tenantId}.device.${this.deviceId}`;
+        const channelName = `gps.tenant.${this.tenantId}.device.${this.deviceId}`;
 
-        this.echo.channel(channelName)
+        this.echo.private(channelName)
             .listen('.location.update', (data) => {
                 this.updateLocation(data);
             });
@@ -102,7 +102,7 @@ class GpsLiveMap {
 
     disconnect() {
         if (this.echo && this.deviceId && this.tenantId) {
-            const channelName = `private-gps.tenant.${this.tenantId}.device.${this.deviceId}`;
+            const channelName = `gps.tenant.${this.tenantId}.device.${this.deviceId}`;
             this.echo.leave(channelName);
         }
     }
