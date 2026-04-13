@@ -42,7 +42,7 @@ class GpsMapPage extends Page
     public function updatedSelectedDeviceId(): void
     {
         $this->lastUpdatedAt = now()->format('H:i:s');
-        $this->dispatch('gps-points-updated', points: $this->getPoints());
+        $this->dispatch('gps-points-updated', points: $this->getPoints(), deviceName: $this->getSelectedDeviceName());
     }
 
     public function refreshPoints(): void
@@ -52,14 +52,28 @@ class GpsMapPage extends Page
         }
 
         $this->lastUpdatedAt = now()->format('H:i:s');
-        $this->dispatch('gps-points-updated', points: $this->getPoints());
+        $this->dispatch('gps-points-updated', points: $this->getPoints(), deviceName: $this->getSelectedDeviceName());
+    }
+
+    private function getSelectedDeviceName(): string
+    {
+        $device = Device::query()->with('user')->find($this->selectedDeviceId);
+
+        if (! $device) {
+            return '';
+        }
+
+        return $device->imei . ($device->user ? ' · ' . $device->user->name : '');
     }
 
     protected function getViewData(): array
     {
+        $devices = Device::query()->with('user')->orderBy('imei')->get();
+
         return [
-            'devices'       => Device::query()->with('user')->orderBy('imei')->get(),
-            'initialPoints' => $this->selectedDeviceId ? $this->getPoints() : [],
+            'devices'            => $devices,
+            'initialPoints'      => $this->selectedDeviceId ? $this->getPoints() : [],
+            'selectedDeviceName' => $this->selectedDeviceId ? $this->getSelectedDeviceName() : '',
         ];
     }
 

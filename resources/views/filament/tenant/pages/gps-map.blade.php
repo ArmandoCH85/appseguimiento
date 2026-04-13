@@ -56,12 +56,44 @@
 
     <script>
     (function () {
-        var initialPoints = @json($initialPoints);
+        var initialPoints   = @json($initialPoints);
+        var deviceName      = @json($selectedDeviceName);
 
         function toCoords(points) {
             return points
                 .map(function (p) { return [parseFloat(p.latitude), parseFloat(p.longitude)]; })
                 .filter(function (c) { return !isNaN(c[0]) && !isNaN(c[1]); });
+        }
+
+        function phoneIcon() {
+            return L.divIcon({
+                className: '',
+                html: [
+                    '<div style="',
+                    '  background:#10b981;',
+                    '  border-radius:50%;',
+                    '  width:36px;height:36px;',
+                    '  display:flex;align-items:center;justify-content:center;',
+                    '  border:2px solid #fff;',
+                    '  box-shadow:0 2px 8px rgba(0,0,0,0.35);',
+                    '  font-size:18px;',
+                    '">📱</div>',
+                ].join(''),
+                iconSize:    [36, 36],
+                iconAnchor:  [18, 18],
+                popupAnchor: [0, -22],
+            });
+        }
+
+        function popupContent() {
+            var now = new Date().toLocaleString('es-AR', {
+                day: '2-digit', month: '2-digit', year: 'numeric',
+                hour: '2-digit', minute: '2-digit', second: '2-digit',
+            });
+            return '<div style="font-family:sans-serif;min-width:160px;">' +
+                   '  <div style="font-weight:600;margin-bottom:4px;">📱 ' + deviceName + '</div>' +
+                   '  <div style="font-size:12px;color:#6b7280;">🕐 ' + now + '</div>' +
+                   '</div>';
         }
 
         function updateMap(points) {
@@ -79,8 +111,11 @@
             var last = coords[coords.length - 1];
             if (window.__gpsMarker) {
                 window.__gpsMarker.setLatLng(last);
+                window.__gpsMarker.setPopupContent(popupContent());
             } else {
-                window.__gpsMarker = L.marker(last).addTo(window.__gpsMap);
+                window.__gpsMarker = L.marker(last, { icon: phoneIcon() })
+                    .bindPopup(popupContent())
+                    .addTo(window.__gpsMap);
             }
 
             window.__gpsMap.fitBounds(L.latLngBounds(coords), { padding: [60, 60] });
@@ -114,6 +149,7 @@
         }
 
         window.addEventListener('gps-points-updated', function (e) {
+            if (e.detail.deviceName) deviceName = e.detail.deviceName;
             updateMap(e.detail.points);
         });
 
