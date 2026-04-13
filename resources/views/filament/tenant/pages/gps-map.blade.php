@@ -251,7 +251,7 @@
                             </x-filament::badge>
 
                             @if($latestPoint)
-                                <x-filament::badge color="info" icon="heroicon-m-crosshair">
+                                <x-filament::badge color="info" icon="heroicon-m-map-pin">
                                     {{ $latestPoint['accuracy_human'] }}
                                 </x-filament::badge>
                             @endif
