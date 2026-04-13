@@ -203,6 +203,7 @@ class GpsRouteReportPage extends Page
 
         // Calculate date range
         // Por defecto trae TODO el recorrido del dispositivo (sin filtro de tiempo)
+        $reportService = app(GpsRouteReportService::class);
         $points = $reportService->getTracksForReport((int) $this->selectedDeviceId);
 
         logger()->info('GPS Report Result', ['count' => $points->count()]);
