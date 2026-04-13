@@ -8,37 +8,43 @@
             Seleccioná un dispositivo para ver su recorrido en vivo.
         </x-slot>
 
-        <form method="GET" class="mb-4">
-            <select name="device_id" onchange="this.form.submit()" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
-                <option value="">-- Seleccioná un dispositivo --</option>
-                @foreach($devices as $device)
-                    <option value="{{ $device->id }}" @selected($selectedDeviceId === $device->id)>
-                        {{ $device->imei }} — {{ $device->user->name ?? 'Sin usuario' }}
-                    </option>
-                @endforeach
-            </select>
-        </form>
+        {{ $this->form }}
 
-        <div id="gps-map" style="height: 500px; width: 100%; border-radius: 0.5rem;"></div>
+        @if($this->deviceId)
+            <div wire:ignore>
+                <div id="gps-map" style="height: 500px; width: 100%; border-radius: 0.5rem; margin-top: 1rem;"></div>
+            </div>
+
+            <script>
+                function initGpsMap() {
+                    if (window.__gpsMapInitialized) return;
+                    window.__gpsMapInitialized = true;
+
+                    import('/resources/js/widgets/gps-live-map.js').then(module => {
+                        const GpsLiveMap = module.default;
+                        const map = new GpsLiveMap('gps-map', {
+                            deviceId: '{{ $this->deviceId }}',
+                            tenantId: '{{ $this->tenantId }}',
+                        });
+
+                        const initialPoints = @json($this->initialPoints);
+                        if (initialPoints.length > 0) {
+                            map.loadInitialPoints(initialPoints);
+                        }
+                    }).catch(err => console.error('Error loading GPS map:', err));
+                }
+
+                document.addEventListener('DOMContentLoaded', initGpsMap);
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', initGpsMap);
+                } else {
+                    initGpsMap();
+                }
+            </script>
+        @else
+            <div class="text-center text-gray-500 py-8">
+                Seleccioná un dispositivo para ver el mapa.
+            </div>
+        @endif
     </x-filament::section>
-
-    @if($selectedDeviceId)
-        <script type="module">
-            import GpsLiveMap from '{{ Vite::asset('resources/js/widgets/gps-live-map.js') }}';
-
-            const map = new GpsLiveMap('gps-map', {
-                deviceId: '{{ $selectedDeviceId }}',
-                tenantId: '{{ $tenantId }}',
-            });
-
-            const initialPoints = @json($initialPoints);
-            if (initialPoints.length > 0) {
-                map.loadInitialPoints(initialPoints);
-            }
-        </script>
-    @else
-        <div class="text-center text-gray-500 py-8">
-            Seleccioná un dispositivo para ver el mapa.
-        </div>
-    @endif
 </x-filament-widgets::widget>
