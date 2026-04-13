@@ -359,33 +359,46 @@
                             Actividad reciente
                         </x-slot>
 
-                        <div class="space-y-2">
-                            @forelse($recentPoints as $point)
-                                <div @class([
-                                    'rounded-lg border p-2.5 transition-all duration-150',
-                                    'border-emerald-400/50 bg-emerald-50/80 dark:border-emerald-500/50 dark:bg-emerald-500/10' => $point['is_latest'],
-                                    'border-gray-200/80 bg-gray-50/50 dark:border-white/10 dark:bg-white/[0.02]' => ! $point['is_latest'],
-                                ])>
-                                    <div class="flex items-center justify-between">
-                                        <div class="min-w-0 flex-1">
-                                            <p class="truncate text-xs font-semibold text-gray-950 dark:text-white">
-                                                {{ $point['is_latest'] ? '● Posición actual' : 'Punto registrado' }}
-                                            </p>
-                                            <p class="mt-0.5 text-[11px] text-gray-500 dark:text-gray-400">
-                                                {{ $point['time_human'] }}
-                                            </p>
-                                        </div>
-                                        <x-filament::badge size="xs" color="{{ $point['is_latest'] ? 'success' : 'gray' }}" class="ml-2 shrink-0">
-                                            {{ $point['accuracy_human'] }}
-                                        </x-filament::badge>
-                                    </div>
+                        @forelse($recentPoints as $point)
+                            @if($loop->first)
+                                <div class="overflow-hidden rounded-lg border border-gray-200/80 dark:border-white/10">
+                                    <table class="w-full text-xs">
+                                        <thead class="bg-gray-50 dark:bg-white/[0.03]">
+                                            <tr>
+                                                <th class="px-3 py-2 text-left font-semibold text-gray-600 dark:text-gray-400">Estado</th>
+                                                <th class="px-3 py-2 text-left font-semibold text-gray-600 dark:text-gray-400">Hora GPS</th>
+                                                <th class="px-3 py-2 text-right font-semibold text-gray-600 dark:text-gray-400">Precisión</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                            @endif
+                                            <tr class="@if(!$loop->first)border-t border-gray-200/80 dark:border-white/10 @endif @if($point['is_latest'])bg-emerald-50/80 dark:bg-emerald-500/10 @endif">
+                                                <td class="px-3 py-2">
+                                                    <span class="font-semibold @if($point['is_latest'])text-emerald-600 dark:text-emerald-400 @endif">
+                                                        {{ $point['is_latest'] ? '● Actual' : 'Punto' }}
+                                                    </span>
+                                                </td>
+                                                <td class="px-3 py-2 font-mono text-gray-900 dark:text-white">
+                                                    {{ $point['time_human'] }}
+                                                </td>
+                                                <td class="px-3 py-2 text-right">
+                                                    <x-filament::badge size="xs" color="{{ $point['is_latest'] ? 'success' : 'gray' }}">
+                                                        {{ $point['accuracy_human'] }}
+                                                    </x-filament::badge>
+                                                </td>
+                                            </tr>
+                            @if($loop->last)
+                                        </tbody>
+                                    </table>
                                 </div>
-                            @empty
-                                <p class="py-4 text-center text-sm leading-6 text-gray-600 dark:text-gray-300">
+                            @endif
+                        @empty
+                            <div class="rounded-lg border border-gray-200/80 p-6 text-center dark:border-white/10">
+                                <p class="text-sm text-gray-600 dark:text-gray-300">
                                     Sin actividad reciente.
                                 </p>
-                            @endforelse
-                        </div>
+                            </div>
+                        @endforelse
                     </x-filament::section>
                 </div>
             </div>
