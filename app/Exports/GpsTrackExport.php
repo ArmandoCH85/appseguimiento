@@ -15,6 +15,7 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Events\AfterSheet;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
 
 class GpsTrackExport implements WithMultipleSheets
 {
@@ -153,7 +154,7 @@ class PointsSheet implements FromCollection, WithTitle, WithHeadings, WithMappin
                         'color' => ['rgb' => 'FFFFFF'],
                     ],
                     'fill' => [
-                        'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                        'fillType' => Fill::FILL_SOLID,
                         'startColor' => ['rgb' => '10B981'],
                     ],
                 ]);
