@@ -55,29 +55,50 @@
 
         .gps-map-marker {
             position: relative;
-            width: 28px;
-            height: 28px;
-            display: block;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .gps-map-marker__pulse,
-        .gps-map-marker__core {
-            position: absolute;
-            inset: 0;
-            border-radius: 9999px;
+        .gps-map-marker__icon {
+            width: 32px;
+            height: 32px;
+            background: #10b981;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+            border: 2px solid #ffffff;
+        }
+
+        .gps-map-marker__icon svg {
+            width: 20px;
+            height: 20px;
+            color: #ffffff;
         }
 
         .gps-map-marker__pulse {
-            background: rgba(16, 185, 129, 0.18);
-            border: 1px solid rgba(16, 185, 129, 0.28);
-            animation: gps-map-pulse 1.8s ease-out infinite;
+            position: absolute;
+            inset: 0;
+            border-radius: 9999px;
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            animation: gps-map-pulse 2s ease-out infinite;
         }
 
-        .gps-map-marker__core {
-            inset: 5px;
-            background: #10b981;
-            border: 3px solid #ffffff;
-            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35);
+        .gps-map-tooltip {
+            border-radius: 0.75rem !important;
+            border: 1px solid rgba(229, 231, 235, 0.8) !important;
+            box-shadow: 0 12px 32px rgba(15, 23, 42, 0.15) !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+        }
+
+        .gps-map-tooltip .leaflet-tooltip-content {
+            padding: 0.75rem 1rem !important;
         }
 
         .gps-map-start-marker {
@@ -117,6 +138,11 @@
         .dark .gps-map-legend {
             border-color: rgba(255, 255, 255, 0.12);
             background: rgba(3, 7, 18, 0.86);
+        }
+
+        .dark .gps-map-tooltip {
+            border-color: rgba(255, 255, 255, 0.15) !important;
+            background: rgba(17, 24, 39, 0.98) !important;
         }
 
         .dark .gps-map-empty-overlay {
@@ -371,13 +397,14 @@
             points: @json($initialPoints),
             deviceName: @json($selectedDeviceName),
             deviceId: @json($selectedDevice['id'] ?? null),
+            deviceGpsTime: @json($deviceGpsTime),
         };
 
         (function () {
             const defaultCenter = [-12.046374, -77.042793];
 
             function getState() {
-                return window.__gpsMapPageState || { points: [], deviceName: '', deviceId: null };
+                return window.__gpsMapPageState || { points: [], deviceName: '', deviceId: null, deviceGpsTime: null };
             }
 
             function toCoords(points) {
@@ -386,13 +413,76 @@
                     .filter((coords) => !Number.isNaN(coords[0]) && !Number.isNaN(coords[1]));
             }
 
-            function currentMarkerIcon() {
+            function phoneMarkerIcon() {
+                const phoneSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+                    <path d="M10.5 1.5H8.25C7.007 1.5 6 2.507 6 3.75v16.5c0 1.243 1.007 2.25 2.25 2.25h7.5c1.243 0 2.25-1.007 2.25-2.25V3.75c0-1.243-1.007-2.25-2.25-2.25H13.5m-6 0V3h9V1.5m-9 0h9m-3.75 4.5v3m-3 0h6"/>
+                </svg>`;
+
                 return L.divIcon({
                     className: '',
-                    html: '<span class="gps-map-marker"><span class="gps-map-marker__pulse"></span><span class="gps-map-marker__core"></span></span>',
-                    iconSize: [28, 28],
-                    iconAnchor: [14, 14],
+                    html: `<span class="gps-map-marker"><span class="gps-map-marker__pulse"></span><span class="gps-map-marker__icon">${phoneSvg}</span></span>`,
+                    iconSize: [40, 40],
+                    iconAnchor: [20, 20],
+                    tooltipAnchor: [0, -25],
                 });
+            }
+
+            function formatGpsTime(gpsTime) {
+                if (!gpsTime) return 'Sin datos';
+                return gpsTime;
+            }
+
+            function createTooltipContent(deviceName, deviceGpsTime) {
+                const now = new Date();
+                const options = {
+                    timeZone: 'America/Lima',
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: false,
+                };
+
+                const limaTime = now.toLocaleString('es-PE', options);
+                const [datePart, timePart] = limaTime.split(', ');
+
+                return `
+                    <div class="text-sm">
+                        <div class="font-semibold text-gray-900 dark:text-white mb-1.5 flex items-center gap-1.5">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 text-emerald-600">
+                                <path d="M10.5 1.5H8.25C7.007 1.5 6 2.507 6 3.75v16.5c0 1.243 1.007 2.25 2.25 2.25h7.5c1.243 0 2.25-1.007 2.25-2.25V3.75c0-1.243-1.007-2.25-2.25-2.25H13.5m-6 0V3h9V1.5m-3.75 4.5v3m-3 0h6"/>
+                            </svg>
+                            ${deviceName || 'Dispositivo GPS'}
+                        </div>
+                        <div class="space-y-1 text-xs text-gray-600 dark:text-gray-300">
+                            <div class="flex items-center gap-1.5">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5">
+                                    <path d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <span class="font-medium">Hora actual:</span>
+                                <span class="font-mono font-semibold text-emerald-600 dark:text-emerald-400">${timePart}</span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5">
+                                    <path d="M6.75 3v2.25c0 .414.336.75.75.75h3a.75.75 0 00.75-.75V3a.75.75 0 00-.75-.75h-3a.75.75 0 00-.75.75zM6.75 12v2.25c0 .414.336.75.75.75h3a.75.75 0 00.75-.75V12a.75.75 0 00-.75-.75h-3a.75.75 0 00-.75.75zM16.5 3v2.25c0 .414.336.75.75.75h3a.75.75 0 00.75-.75V3a.75.75 0 00-.75-.75h-3a.75.75 0 00-.75.75zM16.5 12v2.25c0 .414.336.75.75.75h3a.75.75 0 00.75-.75V12a.75.75 0 00-.75-.75h-3a.75.75 0 00-.75.75z"/>
+                                </svg>
+                                <span class="font-medium">Fecha:</span>
+                                <span class="font-semibold">${datePart}</span>
+                            </div>
+                            ${deviceGpsTime ? `
+                            <div class="flex items-center gap-1.5 pt-1 border-t border-gray-200 dark:border-gray-600">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5 text-emerald-500">
+                                    <path d="M12 21a9.004 9.004 0 008.716-6.747M12 3a9.004 9.004 0 018.716 6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 3a9.004 9.004 0 00-8.716 6.747"/>
+                                </svg>
+                                <span class="font-medium">Último GPS:</span>
+                                <span class="font-mono font-semibold">${formatGpsTime(deviceGpsTime)}</span>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
             }
 
             function ensureMap() {
@@ -476,16 +566,19 @@
                     window.__gpsMarker.setLatLng(lastPoint);
                 } else {
                     window.__gpsMarker = L.marker(lastPoint, {
-                        icon: currentMarkerIcon(),
+                        icon: phoneMarkerIcon(),
                     }).addTo(map);
                 }
 
-                if (getState().deviceName) {
-                    window.__gpsMarker.bindTooltip(getState().deviceName, {
-                        direction: 'top',
-                        offset: [0, -18],
-                    });
-                }
+                const state = getState();
+                const tooltipContent = createTooltipContent(state.deviceName, state.deviceGpsTime);
+                window.__gpsMarker.unbindTooltip();
+                window.__gpsMarker.bindTooltip(tooltipContent, {
+                    direction: 'top',
+                    offset: [0, -25],
+                    className: 'gps-map-tooltip',
+                    sticky: false,
+                });
 
                 if (shouldRecenter(map, L.latLng(lastPoint[0], lastPoint[1]), !!options.forceFit)) {
                     if (coords.length === 1) {
@@ -526,6 +619,7 @@
                         points: detail.points || [],
                         deviceName: detail.deviceName || '',
                         deviceId: detail.deviceId || null,
+                        deviceGpsTime: detail.deviceGpsTime || null,
                     };
 
                     updateMap(window.__gpsMapPageState.points, {

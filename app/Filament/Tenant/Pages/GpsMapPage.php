@@ -73,6 +73,7 @@ class GpsMapPage extends Page
             points: $this->getPoints(),
             deviceName: $this->getSelectedDeviceName(),
             updatedAt: $this->lastUpdatedAt,
+            deviceGpsTime: $this->deviceGpsTime,
             deviceId: $this->selectedDeviceId,
             shouldFit: true,
         );
@@ -92,6 +93,7 @@ class GpsMapPage extends Page
             points: $this->getPoints(),
             deviceName: $this->getSelectedDeviceName(),
             updatedAt: $this->lastUpdatedAt,
+            deviceGpsTime: $this->deviceGpsTime,
             deviceId: $this->selectedDeviceId,
             shouldFit: false,
         );
@@ -137,6 +139,7 @@ class GpsMapPage extends Page
             'latestPoint' => $latestPoint,
             'pointsCount' => count($mapPoints),
             'recentPoints' => $recentPoints,
+            'deviceGpsTime' => $this->deviceGpsTime,
         ];
     }
 
