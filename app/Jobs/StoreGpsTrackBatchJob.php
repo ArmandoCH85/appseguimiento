@@ -26,20 +26,22 @@ class StoreGpsTrackBatchJob implements ShouldQueue
         public array $validPoints,
     ) {}
 
-    public function handle(GpsTrackService $service): void
+    public function handle(): void
     {
         $tenant = Tenant::query()->findOrFail($this->tenantId);
+        $validPoints = $this->validPoints;
 
-        $tenant->run(function (): void {
-            $inserted = $service->insertBatch($this->validPoints);
+        $tenant->run(function () use ($validPoints): void {
+            $service = app(\App\Services\GpsTrackService::class);
+            $inserted = $service->insertBatch($validPoints);
 
             // Disparar evento del último punto para broadcast en tiempo real
-            if ($inserted > 0 && ! empty($this->validPoints)) {
-                $lastPoint = end($this->validPoints);
+            if ($inserted > 0 && ! empty($validPoints)) {
+                $lastPoint = end($validPoints);
                 $deviceId = $lastPoint['device_id'];
 
                 GpsLocationUpdated::dispatch(
-                    $this->tenantId,
+                    tenant()->getTenantKey(),
                     $deviceId,
                     [
                         'latitud' => $lastPoint['latitude'],
