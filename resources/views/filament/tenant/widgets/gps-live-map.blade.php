@@ -29,7 +29,7 @@
                     if (window.__gpsMapInitialized) return;
                     window.__gpsMapInitialized = true;
 
-                    import('/resources/js/widgets/gps-live-map.js').then(module => {
+                    import('{{ Vite::asset("resources/js/widgets/gps-live-map.js") }}').then(module => {
                         const GpsLiveMap = module.default;
                         const map = new GpsLiveMap('gps-map', {
                             deviceId: '{{ $selectedDeviceId }}',

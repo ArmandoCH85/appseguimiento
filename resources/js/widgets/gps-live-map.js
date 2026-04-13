@@ -47,15 +47,12 @@ class GpsLiveMap {
     connectWebSocket() {
         if (!this.deviceId || !this.tenantId) return;
 
-        this.echo = new Echo({
-            broadcaster: 'reverb',
-            key: import.meta.env.VITE_REVERB_APP_KEY ?? '',
-            wsHost: import.meta.env.VITE_REVERB_HOST ?? '127.0.0.1',
-            wsPort: import.meta.env.VITE_REVERB_PORT ?? 8080,
-            wssPort: import.meta.env.VITE_REVERB_PORT ?? 443,
-            forceTLS: (location.protocol === 'https:'),
-            enabledTransports: ['ws', 'wss'],
-        });
+        this.echo = window.Echo;
+
+        if (!this.echo) {
+            console.error('GpsLiveMap: window.Echo no está disponible. Asegurate de que echo.js se cargó primero.');
+            return;
+        }
 
         const channelName = `private-gps.tenant.${this.tenantId}.device.${this.deviceId}`;
 
@@ -104,8 +101,9 @@ class GpsLiveMap {
     }
 
     disconnect() {
-        if (this.echo) {
-            this.echo.disconnect();
+        if (this.echo && this.deviceId && this.tenantId) {
+            const channelName = `private-gps.tenant.${this.tenantId}.device.${this.deviceId}`;
+            this.echo.leave(channelName);
         }
     }
 }
