@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Models\Tenant\Device;
 use App\Models\Tenant\GpsTrack;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class GpsTrackService
@@ -46,14 +47,15 @@ class GpsTrackService
             }
 
             $validPoints[] = [
+                'id' => Str::ulid()->toBase32(),
                 'device_id' => $device->id,
-                'latitude' => $point['latitud'],
-                'longitude' => $point['longitud'],
+                'latitude' => (float) $point['latitud'],
+                'longitude' => (float) $point['longitud'],
                 'time' => (int) $point['time'],
                 'elapsed_realtime_millis' => (int) $point['elapsedRealtimeMillis'],
                 'accuracy' => (int) $point['accuracy'],
-                'created_at' => now(),
-                'updated_at' => now(),
+                'created_at' => now()->toDateTimeString(),
+                'updated_at' => now()->toDateTimeString(),
             ];
         }
 
