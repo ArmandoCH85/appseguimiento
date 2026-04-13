@@ -450,37 +450,17 @@
 
                 return `
                     <div class="text-sm">
-                        <div class="font-semibold text-gray-900 dark:text-white mb-1.5 flex items-center gap-1.5">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 text-emerald-600">
-                                <path d="M10.5 1.5H8.25C7.007 1.5 6 2.507 6 3.75v16.5c0 1.243 1.007 2.25 2.25 2.25h7.5c1.243 0 2.25-1.007 2.25-2.25V3.75c0-1.243-1.007-2.25-2.25-2.25H13.5m-6 0V3h9V1.5m-3.75 4.5v3m-3 0h6"/>
-                            </svg>
+                        <div class="font-semibold text-gray-900 dark:text-white mb-2">
                             ${deviceName || 'Dispositivo GPS'}
                         </div>
-                        <div class="space-y-1 text-xs text-gray-600 dark:text-gray-300">
-                            <div class="flex items-center gap-1.5">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5">
-                                    <path d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                                <span class="font-medium">Hora actual:</span>
-                                <span class="font-mono font-semibold text-emerald-600 dark:text-emerald-400">${timePart}</span>
-                            </div>
-                            <div class="flex items-center gap-1.5">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5">
-                                    <path d="M6.75 3v2.25c0 .414.336.75.75.75h3a.75.75 0 00.75-.75V3a.75.75 0 00-.75-.75h-3a.75.75 0 00-.75.75zM6.75 12v2.25c0 .414.336.75.75.75h3a.75.75 0 00.75-.75V12a.75.75 0 00-.75-.75h-3a.75.75 0 00-.75.75zM16.5 3v2.25c0 .414.336.75.75.75h3a.75.75 0 00.75-.75V3a.75.75 0 00-.75-.75h-3a.75.75 0 00-.75.75zM16.5 12v2.25c0 .414.336.75.75.75h3a.75.75 0 00.75-.75V12a.75.75 0 00-.75-.75h-3a.75.75 0 00-.75.75z"/>
-                                </svg>
-                                <span class="font-medium">Fecha:</span>
-                                <span class="font-semibold">${datePart}</span>
-                            </div>
-                            ${deviceGpsTime ? `
-                            <div class="flex items-center gap-1.5 pt-1 border-t border-gray-200 dark:border-gray-600">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5 text-emerald-500">
-                                    <path d="M12 21a9.004 9.004 0 008.716-6.747M12 3a9.004 9.004 0 018.716 6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 3a9.004 9.004 0 00-8.716 6.747"/>
-                                </svg>
+                        ${deviceGpsTime ? `
+                        <div class="text-xs text-gray-600 dark:text-gray-300">
+                            <div class="flex justify-between gap-4">
                                 <span class="font-medium">Último GPS:</span>
                                 <span class="font-mono font-semibold">${formatGpsTime(deviceGpsTime)}</span>
                             </div>
-                            ` : ''}
                         </div>
+                        ` : ''}
                     </div>
                 `;
             }
