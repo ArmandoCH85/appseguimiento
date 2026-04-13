@@ -57,14 +57,15 @@ class GpsMapPage extends Page
 
     public function getSubheading(): ?string
     {
-        return 'Monitoreá en tiempo real la trayectoria reciente de un dispositivo, con contexto operativo claro y sin ruido visual.';
+        return null;
     }
 
     public function updatedSelectedDeviceId(): void
     {
         $this->lastUpdatedAt = filled($this->selectedDeviceId) ? $this->limaTime() : null;
 
-        $this->dispatch('gps-points-updated',
+        $this->dispatch(
+            'gps-points-updated',
             points: $this->getPoints(),
             deviceName: $this->getSelectedDeviceName(),
             updatedAt: $this->lastUpdatedAt,
@@ -81,7 +82,8 @@ class GpsMapPage extends Page
 
         $this->lastUpdatedAt = $this->limaTime();
 
-        $this->dispatch('gps-points-updated',
+        $this->dispatch(
+            'gps-points-updated',
             points: $this->getPoints(),
             deviceName: $this->getSelectedDeviceName(),
             updatedAt: $this->lastUpdatedAt,

@@ -34,6 +34,7 @@ class TenantPanelProvider extends PanelProvider
                 'primary' => Color::Emerald,
             ])
             ->authGuard('web')
+            ->sidebarCollapsibleOnDesktop()
             ->discoverResources(
                 in: app_path('Filament/Tenant/Resources'),
                 for: 'App\\Filament\\Tenant\\Resources'
