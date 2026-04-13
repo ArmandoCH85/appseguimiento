@@ -15,41 +15,6 @@
             position: relative;
         }
 
-        .gps-map-meta-label {
-            color: #6b7280;
-            font-size: 0.75rem;
-            font-weight: 600;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-        }
-
-        .gps-map-meta-value {
-            margin-top: 0.25rem;
-            color: #111827;
-            font-size: 0.95rem;
-            font-weight: 600;
-        }
-
-        .gps-map-meta-muted {
-            margin-top: 0.25rem;
-            color: #4b5563;
-            font-size: 0.95rem;
-        }
-
-        .gps-map-timeline-item {
-            padding: 0.75rem;
-            border-radius: 0.85rem;
-            border: 1px solid rgba(229, 231, 235, 0.8);
-            background: rgba(255, 255, 255, 0.85);
-            transition: all 180ms ease;
-        }
-
-        .gps-map-timeline-item--latest {
-            border-color: rgba(52, 211, 153, 0.45);
-            background: rgba(236, 253, 245, 0.95);
-            box-shadow: inset 0 0 0 1px rgba(16, 185, 129, 0.18);
-        }
-
         .gps-map-legend {
             padding: 0.75rem 1rem;
             border-radius: 1rem;
@@ -137,8 +102,8 @@
         }
 
         #gps-map {
-            height: 72dvh;
-            min-height: 32rem;
+            height: 78dvh;
+            min-height: 36rem;
             width: 100%;
             z-index: 0;
         }
@@ -147,29 +112,6 @@
             border-color: rgba(255, 255, 255, 0.1);
             background: #111827;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
-        }
-
-        .dark .gps-map-meta-label {
-            color: #9ca3af;
-        }
-
-        .dark .gps-map-meta-value {
-            color: #f9fafb;
-        }
-
-        .dark .gps-map-meta-muted {
-            color: #d1d5db;
-        }
-
-        .dark .gps-map-timeline-item {
-            border-color: rgba(255, 255, 255, 0.1);
-            background: rgba(255, 255, 255, 0.04);
-        }
-
-        .dark .gps-map-timeline-item--latest {
-            border-color: rgba(16, 185, 129, 0.45);
-            background: rgba(16, 185, 129, 0.1);
-            box-shadow: inset 0 0 0 1px rgba(16, 185, 129, 0.24);
         }
 
         .dark .gps-map-legend {
@@ -199,11 +141,34 @@
             line-height: 2.5rem;
             border: 0;
         }
+
+        .gps-map-update-card {
+            transition: all 200ms ease;
+        }
+
+        .gps-map-update-card:hover {
+            box-shadow: 0 14px 35px rgba(15, 23, 42, 0.12);
+            transform: translateY(-1px);
+        }
+
+        .gps-map-clock-pulse {
+            animation: gps-map-clock-pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes gps-map-clock-pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.6;
+            }
+        }
     </style>
 
-    <div class="space-y-6">
+    <div class="space-y-4">
+        {{-- HEADER: Solo selector y estado --}}
         <x-filament::section>
-            <div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+            <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                 <div class="min-w-0 flex-1">
                     <label for="gps-device-select" class="text-sm font-medium text-gray-950 dark:text-white">
                         Dispositivo
@@ -229,9 +194,20 @@
                             En vivo
                         </x-filament::badge>
 
-                        <div class="rounded-xl border border-gray-200/80 bg-white px-3 py-2 text-sm text-gray-600 shadow-sm dark:border-white/10 dark:bg-gray-900 dark:text-gray-300">
-                            Última actualización del panel:
-                            <span class="font-semibold text-gray-950 dark:text-white">{{ $lastUpdatedAt }}</span>
+                        <div class="gps-map-update-card flex items-center gap-3 rounded-xl border border-gray-200/80 bg-white px-4 py-2.5 shadow-sm dark:border-white/10 dark:bg-gray-900">
+                            <div class="flex items-center gap-2">
+                                <x-filament::icon icon="heroicon-m-clock" class="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                                <span class="text-xs font-medium text-gray-600 dark:text-gray-400">Panel:</span>
+                                <span class="text-xs font-semibold text-gray-950 dark:text-white">{{ $lastUpdatedAt }}</span>
+                            </div>
+                            @if($deviceGpsTime)
+                                <div class="h-4 w-px bg-gray-300 dark:bg-gray-600"></div>
+                                <div class="flex items-center gap-2">
+                                    <x-filament::icon icon="heroicon-m-device-phone-mobile" class="h-4 w-4 text-emerald-600 dark:text-emerald-400 gps-map-clock-pulse" />
+                                    <span class="text-xs font-medium text-gray-600 dark:text-gray-400">GPS:</span>
+                                    <span class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 font-mono">{{ $deviceGpsTime }}</span>
+                                </div>
+                            @endif
                         </div>
                     @else
                         <x-filament::badge color="gray" icon="heroicon-m-signal-slash">
@@ -246,37 +222,41 @@
             </div>
         </x-filament::section>
 
-        <div class="grid grid-cols-1 gap-6 xl:grid-cols-12">
-            <div class="xl:col-span-8">
-                <x-filament::section>
-                    <x-slot name="heading">Seguimiento en vivo</x-slot>
+        {{-- MAPA COMO PROTAGONISTA --}}
+        <div class="grid grid-cols-1 gap-4 xl:grid-cols-12">
+            {{-- Columna principal: Mapa (9 columnas) --}}
+            <div class="xl:col-span-9">
+                <x-filament::section class="relative">
+                    <x-slot name="heading">
+                        <div class="flex items-center gap-2">
+                            <x-filament::icon icon="heroicon-o-map" class="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                            <span>Seguimiento en vivo</span>
+                        </div>
+                    </x-slot>
                     <x-slot name="description">
-                        Últimos 10 puntos recibidos para el dispositivo seleccionado.
+                        @if($selectedDevice)
+                            <span class="text-gray-600 dark:text-gray-300">
+                                {{ $selectedDevice['imei'] }}{{ $selectedDevice['user_name'] ? ' · ' . $selectedDevice['user_name'] : '' }}
+                            </span>
+                        @else
+                            Seleccioná un dispositivo para comenzar el monitoreo.
+                        @endif
                     </x-slot>
 
-                    <div class="mb-4 flex flex-col gap-3 rounded-2xl border border-gray-200/80 bg-gray-50/90 p-4 dark:border-white/10 dark:bg-white/[0.03] md:flex-row md:items-center md:justify-between">
-                        <div class="min-w-0">
-                            <p class="gps-map-meta-label">Dispositivo actual</p>
-                            <p class="mt-1 truncate text-base font-semibold text-gray-950 dark:text-white">
-                                {{ $selectedDevice['imei'] ?? 'Sin dispositivo seleccionado' }}
-                            </p>
-                            <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">
-                                {{ $selectedDevice['user_name'] ?? 'Seleccioná un dispositivo para comenzar el monitoreo en vivo.' }}
-                            </p>
-                        </div>
-
-                        <div class="flex flex-wrap items-center gap-2">
-                            <x-filament::badge color="{{ $pointsCount > 0 ? 'success' : 'gray' }}">
-                                Puntos visibles: {{ $pointsCount }}
+                    {{-- Badges informativos sobre el mapa --}}
+                    @if($selectedDevice && $pointsCount > 0)
+                        <div class="mb-3 flex flex-wrap items-center gap-2">
+                            <x-filament::badge color="success" icon="heroicon-m-map-pin">
+                                Puntos: {{ $pointsCount }}
                             </x-filament::badge>
 
                             @if($latestPoint)
-                                <x-filament::badge color="info">
-                                    Precisión actual: {{ $latestPoint['accuracy_human'] }}
+                                <x-filament::badge color="info" icon="heroicon-m-crosshair">
+                                    {{ $latestPoint['accuracy_human'] }}
                                 </x-filament::badge>
                             @endif
                         </div>
-                    </div>
+                    @endif
 
                     <div class="gps-map-card relative">
                         <div wire:ignore>
@@ -293,7 +273,7 @@
                                         Seleccioná un dispositivo
                                     </h3>
                                     <p class="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">
-                                        Seleccioná un dispositivo para comenzar el monitoreo en vivo.
+                                        Elegí un dispositivo del selector para comenzar el monitoreo en vivo.
                                     </p>
                                 </div>
                             </div>
@@ -307,7 +287,7 @@
                                         Sin puntos GPS recientes
                                     </h3>
                                     <p class="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">
-                                        El dispositivo está seleccionado, pero todavía no recibió puntos para mostrar en el mapa.
+                                        El dispositivo está seleccionado, pero todavía no hay puntos para mostrar.
                                     </p>
                                 </div>
                             </div>
@@ -338,105 +318,67 @@
                 </x-filament::section>
             </div>
 
-            <div class="xl:col-span-4">
-                <div class="space-y-6">
-                    <x-filament::section>
-                        <x-slot name="heading">Dispositivo actual</x-slot>
-                        <x-slot name="description">Contexto operativo del equipo seleccionado.</x-slot>
+            {{-- Panel lateral: Solo información esencial (3 columnas) --}}
+            <div class="xl:col-span-3">
+                <div class="space-y-4">
+                    @if($latestPoint)
+                        <x-filament::section>
+                            <x-slot name="heading" class="flex items-center gap-2">
+                                <x-filament::icon icon="heroicon-o-map-pin" class="h-4 w-4" />
+                                Último punto
+                            </x-slot>
 
-                        <dl class="space-y-4">
-                            <div>
-                                <dt class="gps-map-meta-label">IMEI</dt>
-                                <dd class="gps-map-meta-value">{{ $selectedDevice['imei'] ?? 'Sin selección' }}</dd>
-                            </div>
-
-                            <div>
-                                <dt class="gps-map-meta-label">Usuario asignado</dt>
-                                <dd class="gps-map-meta-value">{{ $selectedDevice['user_name'] ?? 'Sin usuario asignado' }}</dd>
-                                @if($selectedDevice['user_email'] ?? null)
-                                    <p class="gps-map-meta-muted">{{ $selectedDevice['user_email'] }}</p>
-                                @endif
-                            </div>
-
-                            <div>
-                                <dt class="gps-map-meta-label">Puntos visibles</dt>
-                                <dd class="gps-map-meta-value">{{ $pointsCount }}</dd>
-                            </div>
-                        </dl>
-                    </x-filament::section>
-
-                    <x-filament::section>
-                        <x-slot name="heading">Último punto</x-slot>
-                        <x-slot name="description">Ubicación y precisión más recientes.</x-slot>
-
-                        @if($latestPoint)
-                            <dl class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <dl class="space-y-3">
                                 <div>
-                                    <dt class="gps-map-meta-label">Latitud</dt>
-                                    <dd class="gps-map-meta-value">{{ number_format($latestPoint['latitude'], 6) }}</dd>
+                                    <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Coordenadas</dt>
+                                    <dd class="mt-1 font-mono text-sm font-semibold text-gray-950 dark:text-white">
+                                        {{ number_format($latestPoint['latitude'], 6) }}, {{ number_format($latestPoint['longitude'], 6) }}
+                                    </dd>
                                 </div>
 
                                 <div>
-                                    <dt class="gps-map-meta-label">Longitud</dt>
-                                    <dd class="gps-map-meta-value">{{ number_format($latestPoint['longitude'], 6) }}</dd>
+                                    <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Hora GPS</dt>
+                                    <dd class="mt-1 text-sm font-semibold text-gray-950 dark:text-white">{{ $latestPoint['time_human'] }}</dd>
                                 </div>
 
                                 <div>
-                                    <dt class="gps-map-meta-label">Hora GPS</dt>
-                                    <dd class="gps-map-meta-value">{{ $latestPoint['time_human'] }}</dd>
-                                </div>
-
-                                <div>
-                                    <dt class="gps-map-meta-label">Precisión</dt>
-                                    <dd class="gps-map-meta-value">{{ $latestPoint['accuracy_human'] }}</dd>
+                                    <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Precisión</dt>
+                                    <dd class="mt-1 text-sm font-semibold text-emerald-600 dark:text-emerald-400">{{ $latestPoint['accuracy_human'] }}</dd>
                                 </div>
                             </dl>
-                        @else
-                            <p class="text-sm leading-6 text-gray-600 dark:text-gray-300">
-                                Todavía no hay un punto GPS disponible para mostrar detalle.
-                            </p>
-                        @endif
-                    </x-filament::section>
+                        </x-filament::section>
+                    @endif
 
                     <x-filament::section>
-                        <x-slot name="heading">Actividad reciente</x-slot>
-                        <x-slot name="description">Secuencia de los últimos puntos cargados.</x-slot>
+                        <x-slot name="heading" class="flex items-center gap-2">
+                            <x-filament::icon icon="heroicon-o-clock" class="h-4 w-4" />
+                            Actividad reciente
+                        </x-slot>
 
-                        <div class="space-y-3">
+                        <div class="space-y-2">
                             @forelse($recentPoints as $point)
                                 <div @class([
-                                    'gps-map-timeline-item',
-                                    'gps-map-timeline-item--latest' => $point['is_latest'],
+                                    'rounded-lg border p-2.5 transition-all duration-150',
+                                    'border-emerald-400/50 bg-emerald-50/80 dark:border-emerald-500/50 dark:bg-emerald-500/10' => $point['is_latest'],
+                                    'border-gray-200/80 bg-gray-50/50 dark:border-white/10 dark:bg-white/[0.02]' => ! $point['is_latest'],
                                 ])>
-                                    <div class="flex items-start justify-between gap-3">
-                                        <div>
-                                            <p class="text-sm font-semibold text-gray-950 dark:text-white">
-                                                {{ $point['is_latest'] ? 'Posición actual' : 'Punto registrado' }}
+                                    <div class="flex items-center justify-between">
+                                        <div class="min-w-0 flex-1">
+                                            <p class="truncate text-xs font-semibold text-gray-950 dark:text-white">
+                                                {{ $point['is_latest'] ? '● Posición actual' : 'Punto registrado' }}
                                             </p>
-                                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                            <p class="mt-0.5 text-[11px] text-gray-500 dark:text-gray-400">
                                                 {{ $point['time_human'] }}
                                             </p>
                                         </div>
-
-                                        <x-filament::badge color="{{ $point['is_latest'] ? 'success' : 'gray' }}">
+                                        <x-filament::badge size="xs" color="{{ $point['is_latest'] ? 'success' : 'gray' }}" class="ml-2 shrink-0">
                                             {{ $point['accuracy_human'] }}
                                         </x-filament::badge>
                                     </div>
-
-                                    <div class="mt-3 grid grid-cols-2 gap-3 text-sm text-gray-600 dark:text-gray-300">
-                                        <div>
-                                            <p class="gps-map-meta-label">Latitud</p>
-                                            <p class="mt-1 font-medium text-gray-900 dark:text-white">{{ number_format($point['latitude'], 6) }}</p>
-                                        </div>
-                                        <div>
-                                            <p class="gps-map-meta-label">Longitud</p>
-                                            <p class="mt-1 font-medium text-gray-900 dark:text-white">{{ number_format($point['longitude'], 6) }}</p>
-                                        </div>
-                                    </div>
                                 </div>
                             @empty
-                                <p class="text-sm leading-6 text-gray-600 dark:text-gray-300">
-                                    Cuando lleguen puntos GPS recientes, vas a ver el historial corto en esta columna.
+                                <p class="py-4 text-center text-sm leading-6 text-gray-600 dark:text-gray-300">
+                                    Sin actividad reciente.
                                 </p>
                             @endforelse
                         </div>

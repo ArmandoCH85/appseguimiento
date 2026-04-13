@@ -29,6 +29,8 @@ class GpsMapPage extends Page
 
     public ?string $lastUpdatedAt = null;
 
+    public ?string $deviceGpsTime = null;
+
     public function mount(): void
     {
         abort_unless(static::canAccess(), 403);
@@ -37,6 +39,7 @@ class GpsMapPage extends Page
 
         if ($this->selectedDeviceId) {
             $this->lastUpdatedAt = $this->limaTime();
+            $this->deviceGpsTime = $this->getLatestGpsTime();
         }
     }
 
@@ -63,6 +66,7 @@ class GpsMapPage extends Page
     public function updatedSelectedDeviceId(): void
     {
         $this->lastUpdatedAt = filled($this->selectedDeviceId) ? $this->limaTime() : null;
+        $this->deviceGpsTime = $this->getLatestGpsTime();
 
         $this->dispatch(
             'gps-points-updated',
@@ -81,6 +85,7 @@ class GpsMapPage extends Page
         }
 
         $this->lastUpdatedAt = $this->limaTime();
+        $this->deviceGpsTime = $this->getLatestGpsTime();
 
         $this->dispatch(
             'gps-points-updated',
@@ -138,6 +143,27 @@ class GpsMapPage extends Page
     private function limaTime(): string
     {
         return now()->setTimezone('America/Lima')->format('d/m/Y H:i:s');
+    }
+
+    private function getLatestGpsTime(): ?string
+    {
+        if (blank($this->selectedDeviceId)) {
+            return null;
+        }
+
+        $latestTrack = GpsTrack::query()
+            ->where('device_id', $this->selectedDeviceId)
+            ->orderByDesc('time')
+            ->first();
+
+        if (! $latestTrack) {
+            return null;
+        }
+
+        return now()
+            ->setTimestamp((int) ($latestTrack->time / 1000))
+            ->setTimezone('America/Lima')
+            ->format('d/m/Y H:i:s');
     }
 
     private function getSelectedDeviceName(): string
