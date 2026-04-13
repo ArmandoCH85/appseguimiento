@@ -8,6 +8,7 @@ use App\Filament\Tenant\Resources\DeviceResource\Pages;
 use App\Models\Tenant\Device;
 use App\Models\Tenant\User;
 use Filament\Actions\EditAction;
+use Filament\Actions\DeleteAction;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Placeholder;
@@ -83,11 +84,11 @@ class DeviceResource extends Resource
                 ->schema([
                     Select::make('user_id')
                         ->label('Usuario')
-                        ->options(fn (): array => User::query()
+                        ->options(fn (?Device $record): array => User::query()
                             ->where('is_active', true)
-                            ->where(function ($query) {
+                            ->where(function ($query) use ($record) {
                                 $query->whereDoesntHave('device')
-                                    ->orWhere('id', $query->getModel()->getKey());
+                                    ->orWhere('id', $record?->user_id);
                             })
                             ->orderBy('name')
                             ->pluck('name', 'id')
@@ -95,13 +96,15 @@ class DeviceResource extends Resource
                         )
                         ->required()
                         ->searchable()
-                        ->preload(),
+                        ->preload()
+                        ->default(fn (?Device $record) => $record?->user_id),
 
                     TextInput::make('imei')
                         ->label('IMEI')
                         ->required()
                         ->maxLength(15)
-                        ->numeric(),
+                        ->numeric()
+                        ->default(fn (?Device $record) => $record?->imei),
                 ]),
         ]);
     }
@@ -127,6 +130,7 @@ class DeviceResource extends Resource
             ])
             ->actions([
                 EditAction::make()->label('Editar'),
+                DeleteAction::make()->label('Eliminar'),
             ])
             ->defaultSort('created_at', 'desc');
     }
