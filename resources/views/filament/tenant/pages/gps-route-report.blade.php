@@ -16,41 +16,31 @@
             position: relative;
             width: 40px;
             height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: block;
+        }
+
+        .gps-report-marker__pulse,
+        .gps-report-marker__core {
+            position: absolute;
+            inset: 0;
+            border-radius: 9999px;
+        }
+
+        .gps-report-marker__pulse {
+            background: rgba(16, 185, 129, 0.18);
+            border: 1px solid rgba(16, 185, 129, 0.28);
+            animation: gps-report-pulse 1.8s ease-out infinite;
         }
 
         .gps-report-marker__icon {
-            width: 32px;
-            height: 32px;
+            inset: 5px;
             background: #10b981;
+            border: 3px solid #ffffff;
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35);
             border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
-            border: 2px solid #ffffff;
-        }
-
-        .gps-report-marker__icon svg {
-            width: 20px;
-            height: 20px;
-            color: #ffffff;
-        }
-
-        .gps-report-marker__pulse {
-            position: absolute;
-            inset: 0;
-            border-radius: 9999px;
-            background: rgba(16, 185, 129, 0.15);
-            border: 1px solid rgba(16, 185, 129, 0.25);
-            animation: gps-report-pulse 2s ease-out infinite;
-        }
-
-        @keyframes gps-report-pulse {
-            0% { transform: scale(0.9); opacity: 0.85; }
-            100% { transform: scale(1.8); opacity: 0; }
         }
 
         .gps-report-start-marker {
@@ -60,6 +50,11 @@
             background: #0f172a;
             border: 2px solid #ffffff;
             box-shadow: 0 4px 10px rgba(15, 23, 42, 0.2);
+        }
+
+        @keyframes gps-report-pulse {
+            0% { transform: scale(0.9); opacity: 0.85; }
+            100% { transform: scale(1.8); opacity: 0; }
         }
 
         #gps-report-map {
@@ -73,6 +68,20 @@
             border-color: rgba(255, 255, 255, 0.1);
             background: #111827;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+        }
+
+        .dark .gps-report-legend {
+            border-color: rgba(255, 255, 255, 0.12);
+            background: rgba(3, 7, 18, 0.86);
+        }
+
+        .dark .gps-report-empty-overlay {
+            background: linear-gradient(135deg, rgba(3, 7, 18, 0.82), rgba(3, 7, 18, 0.7), rgba(3, 7, 18, 0.62));
+        }
+
+        .dark .gps-report-empty-panel {
+            border-color: rgba(255, 255, 255, 0.1);
+            background: rgba(17, 24, 39, 0.96);
         }
 
         #gps-report-map .leaflet-control-zoom {
@@ -111,15 +120,6 @@
             box-shadow: 0 24px 60px rgba(15, 23, 42, 0.16);
         }
 
-        .dark .gps-report-empty-overlay {
-            background: linear-gradient(135deg, rgba(3, 7, 18, 0.82), rgba(3, 7, 18, 0.7), rgba(3, 7, 18, 0.62));
-        }
-
-        .dark .gps-report-empty-panel {
-            border-color: rgba(255, 255, 255, 0.1);
-            background: rgba(17, 24, 39, 0.96);
-        }
-
         .gps-report-legend {
             padding: 0.75rem 1rem;
             border-radius: 1rem;
@@ -134,11 +134,6 @@
             width: 0.65rem;
             height: 0.65rem;
             border-radius: 9999px;
-        }
-
-        .dark .gps-report-legend {
-            border-color: rgba(255, 255, 255, 0.12);
-            background: rgba(3, 7, 18, 0.86);
         }
     </style>
 
@@ -269,14 +264,13 @@
                     </div>
                 </div>
 
-                <div class="gps-report-card relative" 
-                     x-data="gpsMapManager()" 
-                     x-init="init()"
-                     wire:ignore.self>
-                    <div id="gps-report-map"></div>
+                <div class="gps-report-card relative">
+                    <div wire:ignore>
+                        <div id="gps-report-map"></div>
+                    </div>
 
                     @if(!$reportGenerated || empty($reportPoints))
-                        <div class="gps-report-empty-overlay" x-show="!hasPoints" x-transition>
+                        <div class="gps-report-empty-overlay">
                             <div class="gps-report-empty-panel">
                                 <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300">
                                     <x-filament::icon icon="heroicon-o-map-pin" class="h-8 w-8" />
@@ -307,7 +301,7 @@
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <span class="gps-report-legend-dot bg-emerald-500 ring-4 ring-emerald-500/20"></span>
-                                    <span>Punto actual</span>
+                                    <span>Punto final</span>
                                 </div>
                             </div>
                         </div>
@@ -412,91 +406,153 @@
     </div>
 
     <script>
-        function gpsMapManager() {
-            return {
-                hasPoints: @json(!empty($reportPoints)),
-                points: @json($reportPoints),
-                map: null,
+        window.__gpsReportState = {
+            points: @json($reportPoints),
+        };
 
-                init() {
-                    if (this.points.length > 0) {
-                        this.$nextTick(() => {
-                            this.renderMap();
-                        });
-                    }
-                },
+        (function () {
+            const defaultCenter = [-12.046374, -77.042793];
 
-                toCoords(points) {
-                    return (points || [])
-                        .map((point) => [parseFloat(point.latitude), parseFloat(point.longitude)])
-                        .filter((coords) => !Number.isNaN(coords[0]) && !Number.isNaN(coords[1]));
-                },
+            function getState() {
+                return window.__gpsReportState || { points: [] };
+            }
 
-                pointMarkerIcon() {
-                    const phoneSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:20px;height:20px;color:white;">
-                        <path d="M10.5 1.5H8.25C7.007 1.5 6 2.507 6 3.75v16.5c0 1.243 1.007 2.25 2.25 2.25h7.5c1.243 0 2.25-1.007 2.25-2.25V3.75c0-1.243-1.007-2.25-2.25-2.25H13.5m-6 0V3h9V1.5m-9 0h9m-3.75 4.5v3m-3 0h6"/>
-                    </svg>`;
+            function toCoords(points) {
+                return (points || [])
+                    .map((point) => [parseFloat(point.latitude), parseFloat(point.longitude)])
+                    .filter((coords) => !Number.isNaN(coords[0]) && !Number.isNaN(coords[1]));
+            }
 
-                    return L.divIcon({
-                        className: '',
-                        html: `<div style="position:relative;width:40px;height:40px;display:flex;align-items:center;justify-content:center;"><div style="position:absolute;inset:0;border-radius:9999px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.25);animation:gps-report-pulse 2s ease-out infinite;"></div><div style="width:32px;height:32px;background:#10b981;border-radius:8px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(16,185,129,0.4);border:2px solid white;">${phoneSvg}</div></div>`,
-                        iconSize: [40, 40],
-                        iconAnchor: [20, 20],
-                    });
-                },
+            function pointMarkerIcon() {
+                const phoneSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+                    <path d="M10.5 1.5H8.25C7.007 1.5 6 2.507 6 3.75v16.5c0 1.243 1.007 2.25 2.25 2.25h7.5c1.243 0 2.25-1.007 2.25-2.25V3.75c0-1.243-1.007-2.25-2.25-2.25H13.5m-6 0V3h9V1.5m-9 0h9m-3.75 4.5v3m-3 0h6"/>
+                </svg>`;
 
-                startMarkerIcon() {
-                    return L.divIcon({
-                        className: '',
-                        html: '<div style="width:12px;height:12px;border-radius:9999px;background:#0f172a;border:2px solid white;box-shadow:0 4px 10px rgba(15,23,42,0.2);"></div>',
-                        iconSize: [12, 12],
-                        iconAnchor: [6, 6],
-                    });
-                },
+                return L.divIcon({
+                    className: '',
+                    html: `<span class="gps-report-marker"><span class="gps-report-marker__pulse"></span><span class="gps-report-marker__icon">${phoneSvg}</span></span>`,
+                    iconSize: [40, 40],
+                    iconAnchor: [20, 20],
+                });
+            }
 
-                renderMap() {
-                    const coords = this.toCoords(this.points);
+            function startMarkerIcon() {
+                return L.divIcon({
+                    className: '',
+                    html: '<span class="gps-report-start-marker"></span>',
+                    iconSize: [12, 12],
+                    iconAnchor: [6, 6],
+                });
+            }
 
-                    // Destroy existing map
-                    if (this.map) {
-                        this.map.remove();
-                        this.map = null;
-                    }
-
-                    if (!coords.length) return;
-
-                    this.map = L.map('gps-report-map', { zoomControl: true }).setView(coords[0], 14);
-
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-                        maxZoom: 19,
-                    }).addTo(this.map);
-
-                    L.polyline(coords, {
-                        color: '#10b981',
-                        weight: 4,
-                        opacity: 0.9,
-                        lineCap: 'round',
-                        lineJoin: 'round',
-                    }).addTo(this.map);
-
-                    L.marker(coords[0], { icon: this.startMarkerIcon() }).addTo(this.map);
-                    L.marker(coords[coords.length - 1], { icon: this.pointMarkerIcon() }).addTo(this.map);
-
-                    if (coords.length > 1) {
-                        this.map.fitBounds(L.latLngBounds(coords), { padding: [60, 60], maxZoom: 16 });
-                    } else {
-                        this.map.setView(coords[0], 16);
-                    }
+            function ensureMap() {
+                if (window.__gpsReportMap) {
+                    return window.__gpsReportMap;
                 }
-            };
-        }
-    </script>
 
-    <style>
-        @keyframes gps-report-pulse {
-            0% { transform: scale(0.9); opacity: 0.85; }
-            100% { transform: scale(1.8); opacity: 0; }
-        }
-    </style>
+                const map = L.map('gps-report-map', { zoomControl: true }).setView(defaultCenter, 12);
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+                    maxZoom: 19,
+                }).addTo(map);
+
+                window.__gpsReportMap = map;
+                window.__gpsReportPath = L.polyline([], {
+                    color: '#10b981',
+                    weight: 4,
+                    opacity: 0.9,
+                    lineCap: 'round',
+                    lineJoin: 'round',
+                }).addTo(map);
+                window.__gpsReportStartMarker = null;
+                window.__gpsReportEndMarker = null;
+
+                return map;
+            }
+
+            function removeMarker(markerKey) {
+                if (window[markerKey]) {
+                    window.__gpsReportMap.removeLayer(window[markerKey]);
+                    window[markerKey] = null;
+                }
+            }
+
+            function updateMap(points) {
+                const map = ensureMap();
+                const coords = toCoords(points);
+
+                if (!coords.length) {
+                    window.__gpsReportPath.setLatLngs([]);
+                    removeMarker('__gpsReportStartMarker');
+                    removeMarker('__gpsReportEndMarker');
+                    map.setView(defaultCenter, 12);
+                    return;
+                }
+
+                window.__gpsReportPath.setLatLngs(coords);
+
+                const firstPoint = coords[0];
+                const lastPoint = coords[coords.length - 1];
+
+                if (window.__gpsReportStartMarker) {
+                    window.__gpsReportStartMarker.setLatLng(firstPoint);
+                } else {
+                    window.__gpsReportStartMarker = L.marker(firstPoint, {
+                        icon: startMarkerIcon(),
+                    }).addTo(map);
+                }
+
+                if (window.__gpsReportEndMarker) {
+                    window.__gpsReportEndMarker.setLatLng(lastPoint);
+                } else {
+                    window.__gpsReportEndMarker = L.marker(lastPoint, {
+                        icon: pointMarkerIcon(),
+                    }).addTo(map);
+                }
+
+                if (coords.length === 1) {
+                    map.setView(lastPoint, 16);
+                } else {
+                    map.fitBounds(L.latLngBounds(coords), {
+                        padding: [60, 60],
+                        maxZoom: 16,
+                    });
+                }
+            }
+
+            function bootMap() {
+                if (window.L) {
+                    ensureMap();
+                    updateMap(getState().points);
+                    return;
+                }
+
+                const script = document.createElement('script');
+                script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+                script.onload = function () {
+                    ensureMap();
+                    updateMap(getState().points);
+                };
+
+                document.head.appendChild(script);
+            }
+
+            if (!window.__gpsReportPageBooted) {
+                window.__gpsReportPageBooted = true;
+
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', bootMap, { once: true });
+                } else {
+                    bootMap();
+                }
+            } else {
+                setTimeout(function () {
+                    if (window.L) {
+                        updateMap(getState().points);
+                    }
+                }, 0);
+            }
+        })();
+    </script>
 </x-filament-panels::page>
