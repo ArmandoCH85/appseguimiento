@@ -27,12 +27,7 @@ class GpsLiveMapWidget extends Widget
             return;
         }
 
-        $points = GpsTrack::query()
-            ->where('device_id', $this->selectedDeviceId)
-            ->orderBy('time')
-            ->limit(500)
-            ->get()
-            ->toArray();
+        $points = $this->getPoints();
 
         $this->dispatch('gps-points-updated', points: $points);
     }
@@ -44,21 +39,22 @@ class GpsLiveMapWidget extends Widget
             ->orderBy('imei')
             ->get();
 
-        $initialPoints = [];
-        if ($this->selectedDeviceId) {
-            $initialPoints = GpsTrack::query()
-                ->where('device_id', $this->selectedDeviceId)
-                ->orderBy('time')
-                ->limit(500)
-                ->get()
-                ->toArray();
-        }
-
         return [
             'devices'          => $devices,
             'selectedDeviceId' => $this->selectedDeviceId,
-            'initialPoints'    => $initialPoints,
-            'tenantId'         => tenant()->getTenantKey(),
+            'initialPoints'    => $this->selectedDeviceId ? $this->getPoints() : [],
         ];
+    }
+
+    private function getPoints(): array
+    {
+        return GpsTrack::query()
+            ->where('device_id', $this->selectedDeviceId)
+            ->orderByDesc('time')
+            ->limit(10)
+            ->get()
+            ->reverse()
+            ->values()
+            ->toArray();
     }
 }
