@@ -58,7 +58,7 @@ class GpsTrackResource extends Resource
                     ->sortable(),
                 TextColumn::make('time')
                     ->label('Timestamp GPS')
-                    ->formatStateUsing(fn (int $state): string => now()->setTimestampMs($state)->format('d/m/Y H:i:s'))
+                    ->formatStateUsing(fn (int $state): string => now()->setTimestamp((int) ($state / 1000))->format('d/m/Y H:i:s'))
                     ->sortable(),
                 TextColumn::make('accuracy')
                     ->label('Precisión')
@@ -142,7 +142,7 @@ class GpsTrackResource extends Resource
                 ->schema([
                     TextEntry::make('time')
                         ->label('Timestamp GPS (epoch ms)')
-                        ->formatStateUsing(fn (int $state): string => now()->setTimestampMs($state)->format('d/m/Y H:i:s')),
+                        ->formatStateUsing(fn (int $state): string => now()->setTimestamp((int) ($state / 1000))->format('d/m/Y H:i:s')),
                     TextEntry::make('elapsed_realtime_millis')
                         ->label('Elapsed Realtime (ms desde boot)')
                         ->formatStateUsing(fn (int $state): string => number_format($state).' ms'),
