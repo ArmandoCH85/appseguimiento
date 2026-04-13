@@ -111,12 +111,17 @@ class GpsRouteReportService
     /**
      * Obtener tracks filtrados por dispositivo y rango de fechas.
      */
-    public function getTracksForReport(int $deviceId, int $startTimeMs, int $endTimeMs): Collection
+    public function getTracksForReport(int $deviceId, ?int $startTimeMs = null, ?int $endTimeMs = null): Collection
     {
-        return GpsTrack::query()
+        $query = GpsTrack::query()
             ->where('device_id', $deviceId)
-            ->whereBetween('time', [$startTimeMs, $endTimeMs])
-            ->orderBy('time', 'asc')
-            ->get();
+            ->orderBy('time', 'asc');
+
+        // Solo filtrar por tiempo si se proporcionan los valores
+        if ($startTimeMs !== null && $endTimeMs !== null) {
+            $query->whereBetween('time', [$startTimeMs, $endTimeMs]);
+        }
+
+        return $query->get();
     }
 }
