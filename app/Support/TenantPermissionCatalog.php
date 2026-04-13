@@ -32,6 +32,10 @@ final class TenantPermissionCatalog
                 'users.view' => 'Ver usuarios',
                 'users.manage' => 'Gestionar usuarios',
             ],
+            'Dispositivos' => [
+                'devices.view' => 'Ver dispositivos',
+                'devices.manage' => 'Gestionar dispositivos',
+            ],
             'Reportes' => [
                 'reports.view' => 'Ver reportes',
             ],
@@ -66,6 +70,7 @@ final class TenantPermissionCatalog
                 'assignments.view',
                 'submissions.view',
                 'users.view',
+                'devices.view',
                 'reports.view',
             ],
             'operator' => [

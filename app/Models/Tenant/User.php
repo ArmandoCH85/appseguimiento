@@ -49,6 +49,11 @@ class User extends Authenticatable implements FilamentUser
         ];
     }
 
+    public function device()
+    {
+        return $this->hasOne(Device::class);
+    }
+
     public function assignments()
     {
         return $this->hasMany(FormAssignment::class);

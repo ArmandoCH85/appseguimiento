@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Enums\TenantRole;
+use App\Http\Controllers\Api\GpsTrackController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\FormController;
 use App\Http\Controllers\Api\SubmissionController;
@@ -51,5 +52,10 @@ Route::prefix('v1/{tenant}')
 
                 return response()->json(['ok' => true]);
             });
+
+            // GPS Tracking
+            Route::post('/gps/track', [GpsTrackController::class, 'store'])->middleware('throttle:120,1');
+            Route::get('/gps/track', [GpsTrackController::class, 'index'])->middleware('throttle:60,1');
+            Route::get('/gps/track/{track}', [GpsTrackController::class, 'show'])->middleware('throttle:60,1');
         });
     });
