@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Filament\Tenant\Pages;
 
+use App\Filament\Tenant\Resources\GpsTrackResource;
 use App\Models\Tenant\Device;
 use App\Models\Tenant\GpsTrack;
+use Filament\Actions\Action;
 use Filament\Pages\Page;
 use Filament\Support\Enums\Width;
 
@@ -21,17 +23,16 @@ class GpsMapPage extends Page
 
     protected static ?int $navigationSort = 10;
 
+    protected Width | string | null $maxContentWidth = Width::Full;
+
     public ?string $selectedDeviceId = null;
 
     public ?string $lastUpdatedAt = null;
 
-    public function getMaxContentWidth(): Width|string|null
-    {
-        return Width::Full;
-    }
-
     public function mount(): void
     {
+        abort_unless(static::canAccess(), 403);
+
         $this->selectedDeviceId = request()->query('device_id');
 
         if ($this->selectedDeviceId) {
@@ -39,13 +40,36 @@ class GpsMapPage extends Page
         }
     }
 
+    public static function canAccess(): bool
+    {
+        return auth()->user()?->hasPermissionTo('devices.view') ?? false;
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return static::canAccess();
+    }
+
+    public function getTitle(): string
+    {
+        return 'Mapa GPS';
+    }
+
+    public function getSubheading(): ?string
+    {
+        return 'Monitoreá en tiempo real la trayectoria reciente de un dispositivo, con contexto operativo claro y sin ruido visual.';
+    }
+
     public function updatedSelectedDeviceId(): void
     {
-        $this->lastUpdatedAt = $this->limaTime();
+        $this->lastUpdatedAt = filled($this->selectedDeviceId) ? $this->limaTime() : null;
+
         $this->dispatch('gps-points-updated',
-            points:     $this->getPoints(),
+            points: $this->getPoints(),
             deviceName: $this->getSelectedDeviceName(),
-            updatedAt:  $this->lastUpdatedAt,
+            updatedAt: $this->lastUpdatedAt,
+            deviceId: $this->selectedDeviceId,
+            shouldFit: true,
         );
     }
 
@@ -56,11 +80,57 @@ class GpsMapPage extends Page
         }
 
         $this->lastUpdatedAt = $this->limaTime();
+
         $this->dispatch('gps-points-updated',
-            points:     $this->getPoints(),
+            points: $this->getPoints(),
             deviceName: $this->getSelectedDeviceName(),
-            updatedAt:  $this->lastUpdatedAt,
+            updatedAt: $this->lastUpdatedAt,
+            deviceId: $this->selectedDeviceId,
+            shouldFit: false,
         );
+    }
+
+    public function getHeaderActions(): array
+    {
+        return [
+            Action::make('refresh')
+                ->label('Actualizar ahora')
+                ->icon('heroicon-o-arrow-path')
+                ->color('primary')
+                ->disabled(fn (): bool => blank($this->selectedDeviceId))
+                ->action(function (): void {
+                    $this->refreshPoints();
+                }),
+            Action::make('table')
+                ->label('Ver rastreo tabular')
+                ->icon('heroicon-o-table-cells')
+                ->color('gray')
+                ->url(fn (): string => $this->getTabularTrackingUrl()),
+        ];
+    }
+
+    protected function getViewData(): array
+    {
+        $devices = Device::query()->with('user')->orderBy('imei')->get();
+        $selectedDevice = $this->getSelectedDevice();
+        $mapPoints = filled($this->selectedDeviceId) ? $this->getPoints() : [];
+        $recentPoints = filled($this->selectedDeviceId) ? $this->getRecentPoints() : [];
+        $latestPoint = count($recentPoints) > 0 ? $recentPoints[0] : null;
+
+        return [
+            'devices' => $devices,
+            'initialPoints' => $mapPoints,
+            'selectedDeviceName' => filled($this->selectedDeviceId) ? $this->getSelectedDeviceName() : '',
+            'selectedDevice' => $selectedDevice ? [
+                'id' => $selectedDevice->getKey(),
+                'imei' => $selectedDevice->imei,
+                'user_name' => $selectedDevice->user?->name,
+                'user_email' => $selectedDevice->user?->email,
+            ] : null,
+            'latestPoint' => $latestPoint,
+            'pointsCount' => count($mapPoints),
+            'recentPoints' => $recentPoints,
+        ];
     }
 
     private function limaTime(): string
@@ -79,19 +149,23 @@ class GpsMapPage extends Page
         return $device->imei . ($device->user ? ' · ' . $device->user->name : '');
     }
 
-    protected function getViewData(): array
+    private function getSelectedDevice(): ?Device
     {
-        $devices = Device::query()->with('user')->orderBy('imei')->get();
+        if (blank($this->selectedDeviceId)) {
+            return null;
+        }
 
-        return [
-            'devices'            => $devices,
-            'initialPoints'      => $this->selectedDeviceId ? $this->getPoints() : [],
-            'selectedDeviceName' => $this->selectedDeviceId ? $this->getSelectedDeviceName() : '',
-        ];
+        return Device::query()
+            ->with('user')
+            ->find($this->selectedDeviceId);
     }
 
     private function getPoints(): array
     {
+        if (blank($this->selectedDeviceId)) {
+            return [];
+        }
+
         return GpsTrack::query()
             ->where('device_id', $this->selectedDeviceId)
             ->orderByDesc('time')
@@ -99,6 +173,55 @@ class GpsMapPage extends Page
             ->get()
             ->reverse()
             ->values()
-            ->toArray();
+            ->map(fn (GpsTrack $track): array => $this->mapTrack($track, false))
+            ->all();
+    }
+
+    private function getRecentPoints(): array
+    {
+        if (blank($this->selectedDeviceId)) {
+            return [];
+        }
+
+        return GpsTrack::query()
+            ->where('device_id', $this->selectedDeviceId)
+            ->orderByDesc('time')
+            ->limit(10)
+            ->get()
+            ->values()
+            ->map(fn (GpsTrack $track, int $index): array => $this->mapTrack($track, $index === 0))
+            ->all();
+    }
+
+    private function mapTrack(GpsTrack $track, bool $isLatest): array
+    {
+        return [
+            'id' => $track->getKey(),
+            'latitude' => (float) $track->latitude,
+            'longitude' => (float) $track->longitude,
+            'accuracy' => $track->accuracy,
+            'accuracy_human' => "{$track->accuracy} m",
+            'time' => $track->time,
+            'time_human' => now()
+                ->setTimestamp((int) ($track->time / 1000))
+                ->setTimezone('America/Lima')
+                ->format('d/m/Y H:i:s'),
+            'is_latest' => $isLatest,
+        ];
+    }
+
+    private function getTabularTrackingUrl(): string
+    {
+        if (blank($this->selectedDeviceId)) {
+            return GpsTrackResource::getUrl('index');
+        }
+
+        return GpsTrackResource::getUrl('index', [
+            'tableFilters' => [
+                'device_id' => [
+                    'value' => $this->selectedDeviceId,
+                ],
+            ],
+        ]);
     }
 }

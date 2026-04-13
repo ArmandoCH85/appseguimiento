@@ -20,12 +20,24 @@ return new class extends Migration
             Permission::firstOrCreate($permission);
         }
 
-        // Asignar permisos de devices al rol admin y supervisor
-        $adminRole = Role::findByName('admin', 'web');
-        $adminRole->givePermissionTo('devices.view', 'devices.manage');
+        // Asignar permisos solo si los roles ya existen.
+        $adminRole = Role::query()
+            ->where('name', 'admin')
+            ->where('guard_name', 'web')
+            ->first();
 
-        $supervisorRole = Role::findByName('supervisor', 'web');
-        $supervisorRole->givePermissionTo('devices.view');
+        if ($adminRole) {
+            $adminRole->givePermissionTo('devices.view', 'devices.manage');
+        }
+
+        $supervisorRole = Role::query()
+            ->where('name', 'supervisor')
+            ->where('guard_name', 'web')
+            ->first();
+
+        if ($supervisorRole) {
+            $supervisorRole->givePermissionTo('devices.view');
+        }
     }
 
     public function down(): void
