@@ -67,7 +67,7 @@ class DeviceResource extends Resource
                         ->label('IMEI')
                         ->required()
                         ->maxLength(15)
-                        ->numeric()
+                        ->regex('/^[0-9]{15}$/')
                         ->placeholder('Ej: 123456789012345')
                         ->columnSpanFull()
                         ->helperText('Ingresá manualmente el IMEI del dispositivo.'),
@@ -103,7 +103,7 @@ class DeviceResource extends Resource
                         ->label('IMEI')
                         ->required()
                         ->maxLength(15)
-                        ->numeric()
+                        ->regex('/^[0-9]{15}$/')
                         ->default(fn (?Device $record) => $record?->imei),
                 ]),
         ]);
