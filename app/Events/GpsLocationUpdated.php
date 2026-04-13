@@ -8,10 +8,12 @@ use App\Models\Tenant\GpsTrack;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
 class GpsLocationUpdated implements ShouldBroadcast
 {
+    use Dispatchable;
     use InteractsWithSockets;
     use SerializesModels;
 
