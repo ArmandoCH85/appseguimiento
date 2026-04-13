@@ -6,7 +6,6 @@ namespace App\Jobs;
 
 use App\Events\GpsLocationUpdated;
 use App\Models\Central\Tenant;
-use App\Models\Tenant\GpsTrack;
 use App\Services\GpsTrackService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -32,26 +31,27 @@ class StoreGpsTrackBatchJob implements ShouldQueue
         $validPoints = $this->validPoints;
 
         $tenant->run(function () use ($validPoints): void {
-            $service = app(\App\Services\GpsTrackService::class);
+            $service = app(GpsTrackService::class);
             $inserted = $service->insertBatch($validPoints);
 
             // Disparar evento del último punto para broadcast en tiempo real
-            if ($inserted > 0 && ! empty($validPoints)) {
-                $lastPoint = end($validPoints);
-                $deviceId = $lastPoint['device_id'];
+            // Comentado: no se usa Reverb para WebSocket
+            // if ($inserted > 0 && ! empty($validPoints)) {
+            //     $lastPoint = end($validPoints);
+            //     $deviceId = $lastPoint['device_id'];
 
-                GpsLocationUpdated::dispatch(
-                    tenant()->getTenantKey(),
-                    $deviceId,
-                    [
-                        'latitud' => $lastPoint['latitude'],
-                        'longitud' => $lastPoint['longitude'],
-                        'time' => $lastPoint['time'],
-                        'elapsedRealtimeMillis' => $lastPoint['elapsed_realtime_millis'],
-                        'accuracy' => $lastPoint['accuracy'],
-                    ],
-                );
-            }
+            //     GpsLocationUpdated::dispatch(
+            //         tenant()->getTenantKey(),
+            //         $deviceId,
+            //         [
+            //             'latitud' => $lastPoint['latitude'],
+            //             'longitud' => $lastPoint['longitude'],
+            //             'time' => $lastPoint['time'],
+            //             'elapsedRealtimeMillis' => $lastPoint['elapsed_realtime_millis'],
+            //             'accuracy' => $lastPoint['accuracy'],
+            //         ],
+            //     );
+            // }
         });
     }
 }
