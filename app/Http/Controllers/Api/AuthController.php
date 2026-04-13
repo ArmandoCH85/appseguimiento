@@ -44,7 +44,7 @@ class AuthController extends Controller
             ], JsonResponse::HTTP_FORBIDDEN);
         }
 
-        $token = $user->createToken('mobile')->plainTextToken;
+        $token = $user->createToken('mobile', ['*'], now()->addMinutes(config('sanctum.expiration')))->plainTextToken;
 
         return response()->json([
             'token' => $token,
@@ -65,7 +65,7 @@ class AuthController extends Controller
 
         $user->currentAccessToken()?->delete();
 
-        $token = $user->createToken('mobile')->plainTextToken;
+        $token = $user->createToken('mobile', ['*'], now()->addMinutes(config('sanctum.expiration')))->plainTextToken;
 
         return response()->json([
             'token' => $token,
