@@ -57,7 +57,7 @@ class GpsTrackResource extends Resource
                     ->sortable(),
                 TextColumn::make('time')
                     ->label('Timestamp GPS')
-                    ->formatStateUsing(fn (int $state): string => now()->setTimestamp((int) ($state / 1000))->format('d/m/Y H:i:s'))
+                    ->formatStateUsing(fn (int $state): string => now()->setTimestamp((int) ($state / 1000))->setTimezone('America/Lima')->format('d/m/Y H:i:s'))
                     ->sortable(),
                 TextColumn::make('accuracy')
                     ->label('Precisión')
@@ -65,7 +65,7 @@ class GpsTrackResource extends Resource
                     ->sortable(),
                 TextColumn::make('created_at')
                     ->label('Registrado')
-                    ->dateTime('d/m/Y H:i:s')
+                    ->dateTime('d/m/Y H:i:s', timezone: 'America/Lima')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
@@ -141,13 +141,13 @@ class GpsTrackResource extends Resource
                 ->schema([
                     TextEntry::make('time')
                         ->label('Timestamp GPS (epoch ms)')
-                        ->formatStateUsing(fn (int $state): string => now()->setTimestamp((int) ($state / 1000))->format('d/m/Y H:i:s')),
+                        ->formatStateUsing(fn (int $state): string => now()->setTimestamp((int) ($state / 1000))->setTimezone('America/Lima')->format('d/m/Y H:i:s')),
                     TextEntry::make('elapsed_realtime_millis')
                         ->label('Elapsed Realtime (ms desde boot)')
                         ->formatStateUsing(fn (int $state): string => number_format($state).' ms'),
                     TextEntry::make('created_at')
                         ->label('Registrado en sistema')
-                        ->dateTime('d/m/Y H:i:s'),
+                        ->dateTime('d/m/Y H:i:s', timezone: 'America/Lima'),
                 ])
                 ->columns(2),
         ]);
