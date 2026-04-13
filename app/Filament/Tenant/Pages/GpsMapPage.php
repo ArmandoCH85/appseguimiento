@@ -23,6 +23,8 @@ class GpsMapPage extends Page
 
     public ?string $selectedDeviceId = null;
 
+    public ?string $lastUpdatedAt = null;
+
     public function getMaxContentWidth(): Width|string|null
     {
         return Width::Full;
@@ -31,6 +33,16 @@ class GpsMapPage extends Page
     public function mount(): void
     {
         $this->selectedDeviceId = request()->query('device_id');
+
+        if ($this->selectedDeviceId) {
+            $this->lastUpdatedAt = now()->format('H:i:s');
+        }
+    }
+
+    public function updatedSelectedDeviceId(): void
+    {
+        $this->lastUpdatedAt = now()->format('H:i:s');
+        $this->dispatch('gps-points-updated', points: $this->getPoints());
     }
 
     public function refreshPoints(): void
@@ -39,15 +51,15 @@ class GpsMapPage extends Page
             return;
         }
 
+        $this->lastUpdatedAt = now()->format('H:i:s');
         $this->dispatch('gps-points-updated', points: $this->getPoints());
     }
 
     protected function getViewData(): array
     {
         return [
-            'devices'          => Device::query()->with('user')->orderBy('imei')->get(),
-            'selectedDeviceId' => $this->selectedDeviceId,
-            'initialPoints'    => $this->selectedDeviceId ? $this->getPoints() : [],
+            'devices'       => Device::query()->with('user')->orderBy('imei')->get(),
+            'initialPoints' => $this->selectedDeviceId ? $this->getPoints() : [],
         ];
     }
 
