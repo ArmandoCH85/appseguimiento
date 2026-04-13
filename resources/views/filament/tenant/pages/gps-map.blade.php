@@ -292,28 +292,6 @@
                                 </div>
                             </div>
                         @endif
-
-                        @if($selectedDevice && $pointsCount > 0)
-                            <div class="gps-map-legend absolute left-4 top-4 z-[500]">
-                                <p class="text-xs font-semibold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
-                                    Referencia
-                                </p>
-                                <div class="mt-3 space-y-2 text-sm text-gray-700 dark:text-gray-200">
-                                    <div class="flex items-center gap-2">
-                                        <span class="gps-map-legend-dot bg-slate-900 dark:bg-slate-100"></span>
-                                        <span>Inicio del tramo</span>
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                        <span class="gps-map-legend-dot bg-emerald-500"></span>
-                                        <span>Recorrido reciente</span>
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                        <span class="gps-map-legend-dot bg-emerald-500 ring-4 ring-emerald-500/20"></span>
-                                        <span>Posición actual</span>
-                                    </div>
-                                </div>
-                            </div>
-                        @endif
                     </div>
                 </x-filament::section>
             </div>
