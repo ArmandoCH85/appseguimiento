@@ -34,9 +34,9 @@ class GpsTrackService
             $validator = Validator::make($point, [
                 'latitud' => 'required|numeric',
                 'longitud' => 'required|numeric',
-                'time' => 'required|integer|min:0',
-                'elapsedRealtimeMillis' => 'required|integer|min:0',
-                'accuracy' => 'required|integer|min:0',
+                'time' => 'required|numeric|min:0',
+                'elapsedRealtimeMillis' => 'required|numeric|min:0',
+                'accuracy' => 'required|numeric|min:0',
             ]);
 
             if ($validator->fails()) {
@@ -52,6 +52,8 @@ class GpsTrackService
                 'time' => (int) $point['time'],
                 'elapsed_realtime_millis' => (int) $point['elapsedRealtimeMillis'],
                 'accuracy' => (int) $point['accuracy'],
+                'created_at' => now(),
+                'updated_at' => now(),
             ];
         }
 

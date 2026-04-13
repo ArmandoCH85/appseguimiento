@@ -20,9 +20,9 @@ class StoreGpsTrackRequest extends FormRequest
             'points' => ['required', 'array', 'min:1'],
             'points.*.latitud' => ['required', 'numeric'],
             'points.*.longitud' => ['required', 'numeric'],
-            'points.*.time' => ['required', 'integer', 'min:0'],
-            'points.*.elapsedRealtimeMillis' => ['required', 'integer', 'min:0'],
-            'points.*.accuracy' => ['required', 'integer', 'min:0'],
+            'points.*.time' => ['required', 'numeric'],
+            'points.*.elapsedRealtimeMillis' => ['required', 'numeric'],
+            'points.*.accuracy' => ['required', 'numeric', 'min:0'],
         ];
     }
 }
