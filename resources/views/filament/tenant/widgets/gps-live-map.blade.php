@@ -8,11 +8,20 @@
             Seleccioná un dispositivo para ver su recorrido en vivo.
         </x-slot>
 
-        {{ $this->form }}
+        <form method="GET" class="mb-4">
+            <select name="device_id" onchange="this.form.submit()" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                <option value="">-- Seleccioná un dispositivo --</option>
+                @foreach($devices as $device)
+                    <option value="{{ $device->id }}" @selected($selectedDeviceId === $device->id)>
+                        {{ $device->imei }} — {{ $device->user->name ?? 'Sin usuario' }}
+                    </option>
+                @endforeach
+            </select>
+        </form>
 
-        @if($this->deviceId)
+        @if($selectedDeviceId)
             <div wire:ignore>
-                <div id="gps-map" style="height: 500px; width: 100%; border-radius: 0.5rem; margin-top: 1rem;"></div>
+                <div id="gps-map" style="height: 500px; width: 100%; border-radius: 0.5rem;"></div>
             </div>
 
             <script>
@@ -23,11 +32,11 @@
                     import('/resources/js/widgets/gps-live-map.js').then(module => {
                         const GpsLiveMap = module.default;
                         const map = new GpsLiveMap('gps-map', {
-                            deviceId: '{{ $this->deviceId }}',
-                            tenantId: '{{ $this->tenantId }}',
+                            deviceId: '{{ $selectedDeviceId }}',
+                            tenantId: '{{ $tenantId }}',
                         });
 
-                        const initialPoints = @json($this->initialPoints);
+                        const initialPoints = @json($initialPoints);
                         if (initialPoints.length > 0) {
                             map.loadInitialPoints(initialPoints);
                         }
@@ -35,9 +44,7 @@
                 }
 
                 document.addEventListener('DOMContentLoaded', initGpsMap);
-                if (document.readyState === 'loading') {
-                    document.addEventListener('DOMContentLoaded', initGpsMap);
-                } else {
+                if (document.readyState !== 'loading') {
                     initGpsMap();
                 }
             </script>
