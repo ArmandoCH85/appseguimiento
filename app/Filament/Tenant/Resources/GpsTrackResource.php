@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Filament\Tenant\Resources;
 
 use App\Filament\Tenant\Resources\GpsTrackResource\Pages;
-use App\Filament\Tenant\Widgets\GpsLiveMapWidget;
 use App\Models\Tenant\Device;
 use App\Models\Tenant\GpsTrack;
 use Filament\Forms\Components\DatePicker;
@@ -162,10 +161,4 @@ class GpsTrackResource extends Resource
         ];
     }
 
-    public static function getWidgets(): array
-    {
-        return [
-            GpsLiveMapWidget::class,
-        ];
-    }
 }
