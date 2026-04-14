@@ -219,20 +219,15 @@
                         <x-filament::badge color="success" icon="heroicon-m-signal">
                             En vivo
                         </x-filament::badge>
-
-                        <div class="gps-map-update-card flex items-center gap-3 rounded-xl border border-gray-200/80 bg-white px-4 py-2.5 shadow-sm dark:border-white/10 dark:bg-gray-900">
-                            <div class="flex items-center gap-2">
-                                <x-filament::icon icon="heroicon-m-clock" class="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                                <span class="text-xs font-medium text-gray-600 dark:text-gray-400">Panel:</span>
-                                <span class="text-xs font-semibold text-gray-950 dark:text-white">{{ $lastUpdatedAt }}</span>
-                            </div>
+                        <div class="inline-flex max-w-full items-center gap-2 overflow-x-auto text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                            <x-filament::icon icon="heroicon-m-clock" class="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                            <span class="font-medium">Panel</span>
+                            <span class="font-mono font-semibold tabular-nums text-gray-950 dark:text-white">{{ $lastUpdatedAt }}</span>
                             @if($deviceGpsTime)
-                                <div class="h-4 w-px bg-gray-300 dark:bg-gray-600"></div>
-                                <div class="flex items-center gap-2">
-                                    <x-filament::icon icon="heroicon-m-device-phone-mobile" class="h-4 w-4 text-emerald-600 dark:text-emerald-400 gps-map-clock-pulse" />
-                                    <span class="text-xs font-medium text-gray-600 dark:text-gray-400">GPS:</span>
-                                    <span class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 font-mono">{{ $deviceGpsTime }}</span>
-                                </div>
+                                <span class="mx-1 h-3 w-px bg-gray-200 dark:bg-white/10"></span>
+                                <x-filament::icon icon="heroicon-m-device-phone-mobile" class="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                                <span class="font-medium">GPS</span>
+                                <span class="font-mono font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">{{ $deviceGpsTime }}</span>
                             @endif
                         </div>
                     @else
