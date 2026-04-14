@@ -157,16 +157,16 @@
             </div>
         </div>
 
-        {{-- MAPA --}}
-        @if($reportGenerated)
-            <x-filament::section>
-                <x-slot name="heading">
-                    <div class="flex items-center gap-2">
-                        <x-filament::icon icon="heroicon-o-map-pin" class="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                        <span>Mapa de Recorrido</span>
-                    </div>
-                </x-slot>
+        {{-- MAPA — siempre presente, con overlay si no hay datos --}}
+        <x-filament::section>
+            <x-slot name="heading">
+                <div class="flex items-center gap-2">
+                    <x-filament::icon icon="heroicon-o-map-pin" class="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                    <span>Mapa de Recorrido</span>
+                </div>
+            </x-slot>
 
+            @if($reportGenerated)
                 {{-- Resumen rápido --}}
                 <div class="mb-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
                     <div class="rounded-lg border border-gray-200/80 bg-gray-50 px-4 py-3 dark:border-white/10 dark:bg-white/[0.03]">
@@ -197,52 +197,62 @@
                         </p>
                     </div>
                 </div>
+            @endif
 
-                <div class="gps-report-card relative">
-                    <div wire:ignore>
-                        <div id="gps-report-map"></div>
-                    </div>
-
-                    @if(!$reportGenerated || empty($reportPoints))
-                        <div class="gps-report-empty-overlay">
-                            <div class="gps-report-empty-panel">
-                                <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300">
-                                    <x-filament::icon icon="heroicon-o-map-pin" class="h-8 w-8" />
-                                </div>
-                                <h3 class="text-lg font-semibold text-gray-950 dark:text-white">
-                                    Sin datos de recorrido
-                                </h3>
-                                <p class="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">
-                                    No se encontraron puntos GPS para el período seleccionado.
-                                </p>
-                            </div>
-                        </div>
-                    @endif
-
-                    @if(!empty($reportPoints))
-                        <div class="gps-report-legend absolute left-4 top-4 z-[500]">
-                            <p class="text-xs font-semibold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
-                                Referencia
-                            </p>
-                            <div class="mt-3 space-y-2 text-sm text-gray-700 dark:text-gray-200">
-                                <div class="flex items-center gap-2">
-                                    <span class="gps-report-legend-dot bg-slate-900 dark:bg-slate-100"></span>
-                                    <span>Punto de inicio</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <span class="gps-report-legend-dot bg-emerald-500"></span>
-                                    <span>Recorrido</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <span class="gps-report-legend-dot bg-emerald-500 ring-4 ring-emerald-500/20"></span>
-                                    <span>Punto final</span>
-                                </div>
-                            </div>
-                        </div>
-                    @endif
+            <div class="gps-report-card relative">
+                <div wire:ignore>
+                    <div id="gps-report-map"></div>
                 </div>
-            </x-filament::section>
 
+                @if(!$reportGenerated || empty($reportPoints))
+                    <div class="gps-report-empty-overlay">
+                        <div class="gps-report-empty-panel">
+                            <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300">
+                                <x-filament::icon icon="heroicon-o-map-pin" class="h-8 w-8" />
+                            </div>
+                            <h3 class="text-lg font-semibold text-gray-950 dark:text-white">
+                                @if(!$reportGenerated)
+                                    Seleccioná un dispositivo y generá el reporte
+                                @else
+                                    Sin datos de recorrido
+                                @endif
+                            </h3>
+                            <p class="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">
+                                @if(!$reportGenerated)
+                                    Elegí un dispositivo y hacé clic en "Generar Reporte" para ver el recorrido en el mapa.
+                                @else
+                                    No se encontraron puntos GPS para el período seleccionado.
+                                @endif
+                            </p>
+                        </div>
+                    </div>
+                @endif
+
+                @if(!empty($reportPoints))
+                    <div class="gps-report-legend absolute left-4 top-4 z-[500]">
+                        <p class="text-xs font-semibold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
+                            Referencia
+                        </p>
+                        <div class="mt-3 space-y-2 text-sm text-gray-700 dark:text-gray-200">
+                            <div class="flex items-center gap-2">
+                                <span class="gps-report-legend-dot bg-slate-900 dark:bg-slate-100"></span>
+                                <span>Punto de inicio</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="gps-report-legend-dot bg-emerald-500"></span>
+                                <span>Recorrido</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="gps-report-legend-dot bg-emerald-500 ring-4 ring-emerald-500/20"></span>
+                                <span>Punto final</span>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+            </div>
+        </x-filament::section>
+
+        @if($reportGenerated)
             {{-- TABLA DE ACTIVIDAD --}}
             <x-filament::section>
                 <x-slot name="heading">
@@ -340,31 +350,23 @@
     </div>
 
     <script>
-        window.__gpsReportState = {
-            points: @json($reportPoints),
-        };
+        window.__gpsReportPoints = @json($reportPoints);
 
-        (function () {
-            const defaultCenter = [-12.046374, -77.042793];
+        function initOrUpdateMap(points) {
+            var defaultCenter = [-12.046374, -77.042793];
 
-            function getState() {
-                return window.__gpsReportState || { points: [] };
-            }
-
-            function toCoords(points) {
-                return (points || [])
-                    .map((point) => [parseFloat(point.latitude), parseFloat(point.longitude)])
-                    .filter((coords) => !Number.isNaN(coords[0]) && !Number.isNaN(coords[1]));
+            function toCoords(pts) {
+                return (pts || [])
+                    .map(function (point) { return [parseFloat(point.latitude), parseFloat(point.longitude)]; })
+                    .filter(function (coords) { return !Number.isNaN(coords[0]) && !Number.isNaN(coords[1]); });
             }
 
             function pointMarkerIcon() {
-                const phoneSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
-                    <path d="M10.5 1.5H8.25C7.007 1.5 6 2.507 6 3.75v16.5c0 1.243 1.007 2.25 2.25 2.25h7.5c1.243 0 2.25-1.007 2.25-2.25V3.75c0-1.243-1.007-2.25-2.25-2.25H13.5m-6 0V3h9V1.5m-9 0h9m-3.75 4.5v3m-3 0h6"/>
-                </svg>`;
+                var phoneSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6"><path d="M10.5 1.5H8.25C7.007 1.5 6 2.507 6 3.75v16.5c0 1.243 1.007 2.25 2.25 2.25h7.5c1.243 0 2.25-1.007 2.25-2.25V3.75c0-1.243-1.007-2.25-2.25-2.25H13.5m-6 0V3h9V1.5m-9 0h9m-3.75 4.5v3m-3 0h6"/></svg>';
 
                 return L.divIcon({
                     className: '',
-                    html: `<span class="gps-report-marker"><span class="gps-report-marker__pulse"></span><span class="gps-report-marker__icon">${phoneSvg}</span></span>`,
+                    html: '<span class="gps-report-marker"><span class="gps-report-marker__pulse"></span><span class="gps-report-marker__icon">' + phoneSvg + '</span></span>',
                     iconSize: [40, 40],
                     iconAnchor: [20, 20],
                 });
@@ -379,80 +381,51 @@
                 });
             }
 
-            function ensureMap() {
-                if (window.__gpsReportMap) {
-                    return window.__gpsReportMap;
-                }
-
-                const container = document.getElementById('gps-report-map');
-                if (!container) {
-                    console.warn('Map container not found, waiting...');
-                    return null;
-                }
-
-                const map = L.map('gps-report-map', { zoomControl: true }).setView(defaultCenter, 12);
-
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-                    maxZoom: 19,
-                }).addTo(map);
-
-                window.__gpsReportMap = map;
-                window.__gpsReportPath = L.polyline([], {
-                    color: '#10b981',
-                    weight: 4,
-                    opacity: 0.9,
-                    lineCap: 'round',
-                    lineJoin: 'round',
-                }).addTo(map);
+            // Create or re-create the map
+            if (window.__gpsReportMap) {
+                window.__gpsReportMap.remove();
+                window.__gpsReportMap = null;
+                window.__gpsReportPath = null;
                 window.__gpsReportStartMarker = null;
                 window.__gpsReportEndMarker = null;
-
-                return map;
             }
 
-            function removeMarker(markerKey) {
-                if (window[markerKey]) {
-                    window.__gpsReportMap.removeLayer(window[markerKey]);
-                    window[markerKey] = null;
-                }
-            }
+            var container = document.getElementById('gps-report-map');
+            if (!container) return;
 
-            function updateMap(points) {
-                const map = ensureMap();
-                const coords = toCoords(points);
+            var map = L.map('gps-report-map', { zoomControl: true }).setView(defaultCenter, 12);
 
-                if (!coords.length) {
-                    window.__gpsReportPath.setLatLngs([]);
-                    removeMarker('__gpsReportStartMarker');
-                    removeMarker('__gpsReportEndMarker');
-                    map.setView(defaultCenter, 12);
-                    return;
-                }
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+                maxZoom: 19,
+            }).addTo(map);
 
+            window.__gpsReportMap = map;
+            window.__gpsReportPath = L.polyline([], {
+                color: '#10b981',
+                weight: 4,
+                opacity: 0.9,
+                lineCap: 'round',
+                lineJoin: 'round',
+            }).addTo(map);
+            window.__gpsReportStartMarker = null;
+            window.__gpsReportEndMarker = null;
+
+            // Draw points
+            var coords = toCoords(points);
+            if (coords.length > 0) {
                 window.__gpsReportPath.setLatLngs(coords);
 
-                const firstPoint = coords[0];
-                const lastPoint = coords[coords.length - 1];
+                window.__gpsReportStartMarker = L.marker(coords[0], {
+                    icon: startMarkerIcon(),
+                }).addTo(map);
 
-                if (window.__gpsReportStartMarker) {
-                    window.__gpsReportStartMarker.setLatLng(firstPoint);
-                } else {
-                    window.__gpsReportStartMarker = L.marker(firstPoint, {
-                        icon: startMarkerIcon(),
-                    }).addTo(map);
-                }
-
-                if (window.__gpsReportEndMarker) {
-                    window.__gpsReportEndMarker.setLatLng(lastPoint);
-                } else {
-                    window.__gpsReportEndMarker = L.marker(lastPoint, {
-                        icon: pointMarkerIcon(),
-                    }).addTo(map);
-                }
+                window.__gpsReportEndMarker = L.marker(coords[coords.length - 1], {
+                    icon: pointMarkerIcon(),
+                }).addTo(map);
 
                 if (coords.length === 1) {
-                    map.setView(lastPoint, 16);
+                    map.setView(coords[0], 16);
                 } else {
                     map.fitBounds(L.latLngBounds(coords), {
                         padding: [60, 60],
@@ -461,43 +434,29 @@
                 }
             }
 
-            function bootMap() {
-                const map = ensureMap();
-                if (!map) {
-                    setTimeout(bootMap, 300);
-                    return;
-                }
-                updateMap(getState().points);
+            // Invalidate size after DOM morph
+            setTimeout(function () {
+                map.invalidateSize();
+            }, 200);
+        }
+
+        // Make function available globally for Alpine/Livewire
+        window.initOrUpdateMap = initOrUpdateMap;
+
+        // Listen for Livewire v3 dispatched browser events
+        document.addEventListener('gps-report-generated', function (event) {
+            var points = event.detail?.points || window.__gpsReportPoints;
+            // Delay to ensure Livewire DOM morph completed
+            setTimeout(function () {
+                initOrUpdateMap(points);
+            }, 150);
+        });
+
+        // Initial render if points already exist (page reload with data)
+        document.addEventListener('DOMContentLoaded', function () {
+            if (window.__gpsReportPoints && window.__gpsReportPoints.length > 0) {
+                initOrUpdateMap(window.__gpsReportPoints);
             }
-
-            if (!window.__gpsReportPageBooted) {
-                window.__gpsReportPageBooted = true;
-
-                if (document.readyState === 'loading') {
-                    document.addEventListener('DOMContentLoaded', bootMap, { once: true });
-                } else {
-                    bootMap();
-                }
-            } else {
-                setTimeout(function () {
-                    if (window.L) {
-                        updateMap(getState().points);
-                    }
-                }, 0);
-            }
-
-            document.addEventListener('livewire:initialized', function () {
-                Livewire.on('gps-report-generated', function () {
-                    if (window.__gpsReportMap) {
-                        window.__gpsReportMap.remove();
-                        window.__gpsReportMap = null;
-                        window.__gpsReportPath = null;
-                        window.__gpsReportStartMarker = null;
-                        window.__gpsReportEndMarker = null;
-                    }
-                    bootMap();
-                });
-            });
-        })();
+        });
     </script>
 </x-filament-panels::page>
