@@ -87,8 +87,10 @@ class ListSubmissions extends ListRecords
     protected function getStatusLabel(SubmissionStatus $status): string
     {
         return match ($status) {
+            SubmissionStatus::Draft => 'Borrador',
             SubmissionStatus::PendingPhotos => 'Pendiente de Fotos',
             SubmissionStatus::Complete => 'Completado',
+            default => 'Desconocido',
         };
     }
 
