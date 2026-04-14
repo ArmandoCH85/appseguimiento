@@ -248,15 +248,7 @@
             {{-- Columna principal: Mapa (9 columnas) --}}
             <div class="xl:col-span-9">
                 <x-filament::section class="relative">
-                    <x-slot name="description">
-                        @if($selectedDevice)
-                            <span class="text-gray-600 dark:text-gray-300">
-                                {{ $selectedDevice['imei'] }}{{ $selectedDevice['user_name'] ? ' · ' . $selectedDevice['user_name'] : '' }}
-                            </span>
-                        @else
-                            Seleccioná un dispositivo para comenzar el monitoreo.
-                        @endif
-                    </x-slot>
+            
 
                     {{-- Badges informativos sobre el mapa --}}
                     @if($selectedDevice && $pointsCount > 0)
