@@ -55,37 +55,38 @@
 
         .gps-map-marker {
             position: relative;
-            width: 40px;
-            height: 40px;
+            width: 48px;
+            height: 48px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
         .gps-map-marker__icon {
-            width: 32px;
-            height: 32px;
-            background: #10b981;
-            border-radius: 8px;
+            width: 36px;
+            height: 36px;
+            background: #0f172a; /* Slate 900 corporativo */
+            border-radius: 50%; /* Circular moderno */
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
-            border: 2px solid #ffffff;
+            box-shadow: 0 4px 15px rgba(15, 23, 42, 0.3);
+            border: 3px solid #ffffff;
+            z-index: 10;
         }
 
         .gps-map-marker__icon svg {
-            width: 20px;
-            height: 20px;
-            color: #ffffff;
+            width: 18px;
+            height: 18px;
+            color: #10b981; /* Acento esmeralda */
         }
 
         .gps-map-marker__pulse {
             position: absolute;
-            inset: 0;
-            border-radius: 9999px;
-            background: rgba(16, 185, 129, 0.15);
-            border: 1px solid rgba(16, 185, 129, 0.25);
+            inset: 2px;
+            border-radius: 50%;
+            background: rgba(16, 185, 129, 0.25);
+            border: 1px solid rgba(16, 185, 129, 0.4);
             animation: gps-map-pulse 2s ease-out infinite;
         }
 
@@ -359,17 +360,18 @@
                     .filter((coords) => !Number.isNaN(coords[0]) && !Number.isNaN(coords[1]));
             }
 
-            function phoneMarkerIcon() {
-                const phoneSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
-                    <path d="M10.5 1.5H8.25C7.007 1.5 6 2.507 6 3.75v16.5c0 1.243 1.007 2.25 2.25 2.25h7.5c1.243 0 2.25-1.007 2.25-2.25V3.75c0-1.243-1.007-2.25-2.25-2.25H13.5m-6 0V3h9V1.5m-9 0h9m-3.75 4.5v3m-3 0h6"/>
+            function modernMarkerIcon() {
+                // Icono corporativo moderno: flecha de navegación (Solid Heroicon)
+                const navSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M3.478 2.404a.75.75 0 0 0-.926.941l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.404Z" />
                 </svg>`;
 
                 return L.divIcon({
                     className: '',
-                    html: `<span class="gps-map-marker"><span class="gps-map-marker__pulse"></span><span class="gps-map-marker__icon">${phoneSvg}</span></span>`,
-                    iconSize: [40, 40],
-                    iconAnchor: [20, 20],
-                    tooltipAnchor: [0, -25],
+                    html: `<span class="gps-map-marker"><span class="gps-map-marker__pulse"></span><span class="gps-map-marker__icon">${navSvg}</span></span>`,
+                    iconSize: [48, 48],
+                    iconAnchor: [24, 24],
+                    tooltipAnchor: [0, -28],
                 });
             }
 
@@ -492,7 +494,7 @@
                     window.__gpsMarker.setLatLng(lastPoint);
                 } else {
                     window.__gpsMarker = L.marker(lastPoint, {
-                        icon: phoneMarkerIcon(),
+                        icon: modernMarkerIcon(),
                     }).addTo(map);
                 }
 
