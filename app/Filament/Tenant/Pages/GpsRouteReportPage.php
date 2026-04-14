@@ -16,6 +16,7 @@ use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\Width;
+use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Facades\Excel;
 
 class GpsRouteReportPage extends Page
@@ -51,6 +52,8 @@ class GpsRouteReportPage extends Page
     public string $lastTimeFormatted = 'N/A';
 
     public bool $reportGenerated = false;
+
+    public array $reportSegments = [];
 
     public int $perPage = 20;
 
@@ -184,6 +187,15 @@ class GpsRouteReportPage extends Page
             ];
         })->all();
 
+        // Segment tracks by time gaps (>5 min) to avoid connecting unrelated trips
+        $segments = $reportService->segmentTracks($points);
+        $this->reportSegments = array_map(function (Collection $segment): array {
+            return $segment->map(fn (GpsTrack $track): array => [
+                'latitude' => (float) $track->latitude,
+                'longitude' => (float) $track->longitude,
+            ])->all();
+        }, $segments);
+
         $distance = $points->count() > 1 ? $reportService->calculateTotalDistance($points) : 0;
         $duration = $reportService->calculateDuration($points);
 
@@ -193,7 +205,7 @@ class GpsRouteReportPage extends Page
         $this->reportGenerated = $points->count() > 0;
         $this->currentPage = 1;
 
-        $this->dispatch('gps-report-generated', points: $this->reportPoints);
+        $this->dispatch('gps-report-generated', points: $this->reportPoints, segments: $this->reportSegments);
 
         if ($points->count() > 0) {
             $this->firstTimeFormatted = now()

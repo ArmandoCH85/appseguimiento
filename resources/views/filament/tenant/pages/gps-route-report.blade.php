@@ -351,8 +351,9 @@
 
     <script>
         window.__gpsReportPoints = @json($reportPoints);
+        window.__gpsReportSegments = @json($reportSegments);
 
-        function initOrUpdateMap(points) {
+        function initOrUpdateMap(points, segments) {
             var defaultCenter = [-12.046374, -77.042793];
 
             function toCoords(pts) {
@@ -381,14 +382,14 @@
                 });
             }
 
-            // Create or re-create the map
+            // Destroy previous map if it exists
             if (window.__gpsReportMap) {
                 window.__gpsReportMap.remove();
                 window.__gpsReportMap = null;
-                window.__gpsReportPath = null;
-                window.__gpsReportStartMarker = null;
-                window.__gpsReportEndMarker = null;
             }
+            window.__gpsReportPolylines = [];
+            window.__gpsReportStartMarker = null;
+            window.__gpsReportEndMarker = null;
 
             var container = document.getElementById('gps-report-map');
             if (!container) return;
@@ -401,33 +402,63 @@
             }).addTo(map);
 
             window.__gpsReportMap = map;
-            window.__gpsReportPath = L.polyline([], {
-                color: '#10b981',
-                weight: 4,
-                opacity: 0.9,
-                lineCap: 'round',
-                lineJoin: 'round',
-            }).addTo(map);
-            window.__gpsReportStartMarker = null;
-            window.__gpsReportEndMarker = null;
+            window.__gpsReportPolylines = [];
 
-            // Draw points
-            var coords = toCoords(points);
-            if (coords.length > 0) {
-                window.__gpsReportPath.setLatLngs(coords);
+            var allCoords = [];
 
-                window.__gpsReportStartMarker = L.marker(coords[0], {
+            if (segments && segments.length > 0) {
+                // Draw each segment as a separate polyline
+                var segmentColors = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444', '#ec4899', '#14b8a6', '#6366f1'];
+
+                for (var s = 0; s < segments.length; s++) {
+                    var segCoords = toCoords(segments[s]);
+                    if (segCoords.length < 2) {
+                        allCoords = allCoords.concat(segCoords);
+                        continue;
+                    }
+
+                    var color = segmentColors[s % segmentColors.length];
+                    var polyline = L.polyline(segCoords, {
+                        color: color,
+                        weight: 4,
+                        opacity: 0.9,
+                        lineCap: 'round',
+                        lineJoin: 'round',
+                    }).addTo(map);
+
+                    window.__gpsReportPolylines.push(polyline);
+                    allCoords = allCoords.concat(segCoords);
+                }
+            } else {
+                // Fallback: single polyline from flat points
+                var coords = toCoords(points);
+                if (coords.length > 1) {
+                    var polyline = L.polyline(coords, {
+                        color: '#10b981',
+                        weight: 4,
+                        opacity: 0.9,
+                        lineCap: 'round',
+                        lineJoin: 'round',
+                    }).addTo(map);
+                    window.__gpsReportPolylines.push(polyline);
+                }
+                allCoords = coords;
+            }
+
+            // Start and end markers from ALL points
+            if (allCoords.length > 0) {
+                window.__gpsReportStartMarker = L.marker(allCoords[0], {
                     icon: startMarkerIcon(),
                 }).addTo(map);
 
-                window.__gpsReportEndMarker = L.marker(coords[coords.length - 1], {
+                window.__gpsReportEndMarker = L.marker(allCoords[allCoords.length - 1], {
                     icon: pointMarkerIcon(),
                 }).addTo(map);
 
-                if (coords.length === 1) {
-                    map.setView(coords[0], 16);
+                if (allCoords.length === 1) {
+                    map.setView(allCoords[0], 16);
                 } else {
-                    map.fitBounds(L.latLngBounds(coords), {
+                    map.fitBounds(L.latLngBounds(allCoords), {
                         padding: [60, 60],
                         maxZoom: 16,
                     });
@@ -440,22 +471,23 @@
             }, 200);
         }
 
-        // Make function available globally for Alpine/Livewire
         window.initOrUpdateMap = initOrUpdateMap;
 
         // Listen for Livewire v3 dispatched browser events
         document.addEventListener('gps-report-generated', function (event) {
-            var points = event.detail?.points || window.__gpsReportPoints;
-            // Delay to ensure Livewire DOM morph completed
+            var points = (event.detail && event.detail.points) || window.__gpsReportPoints;
+            var segments = (event.detail && event.detail.segments) || window.__gpsReportSegments;
+            window.__gpsReportPoints = points;
+            window.__gpsReportSegments = segments;
             setTimeout(function () {
-                initOrUpdateMap(points);
+                initOrUpdateMap(points, segments);
             }, 150);
         });
 
         // Initial render if points already exist (page reload with data)
         document.addEventListener('DOMContentLoaded', function () {
             if (window.__gpsReportPoints && window.__gpsReportPoints.length > 0) {
-                initOrUpdateMap(window.__gpsReportPoints);
+                initOrUpdateMap(window.__gpsReportPoints, window.__gpsReportSegments);
             }
         });
     </script>

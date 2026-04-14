@@ -9,12 +9,11 @@ use Illuminate\Support\Collection;
 
 class GpsRouteReportService
 {
-    /**
-     * Calcular distancia entre dos puntos usando Haversine (en metros).
-     */
+    private const SEGMENT_GAP_MS = 300000; // 5 minutos — gap mínimo para cortar segmento
+
     public function calculateDistance(float $lat1, float $lon1, float $lat2, float $lon2): float
     {
-        $earthRadius = 6371000; // metros
+        $earthRadius = 6371000;
 
         $dLat = deg2rad($lat2 - $lat1);
         $dLon = deg2rad($lon2 - $lon1);
@@ -28,9 +27,6 @@ class GpsRouteReportService
         return $earthRadius * $c;
     }
 
-    /**
-     * Calcular distancia total de un recorrido en metros.
-     */
     public function calculateTotalDistance(Collection $points): float
     {
         $totalDistance = 0.0;
@@ -50,9 +46,6 @@ class GpsRouteReportService
         return $totalDistance;
     }
 
-    /**
-     * Calcular duración del recorrido en milisegundos.
-     */
     public function calculateDuration(Collection $points): int
     {
         if ($points->count() < 2) {
@@ -65,9 +58,6 @@ class GpsRouteReportService
         return max(0, $lastTime - $firstTime);
     }
 
-    /**
-     * Formatear duración en formato legible (Xh Ymin).
-     */
     public function formatDuration(int $durationMs): string
     {
         $totalMinutes = (int) floor($durationMs / 60000);
@@ -81,21 +71,15 @@ class GpsRouteReportService
         return "{$hours}h {$minutes}min";
     }
 
-    /**
-     * Formatear distancia en formato legible (X.XX km o X m).
-     */
     public function formatDistance(float $distanceMeters): string
     {
         if ($distanceMeters >= 1000) {
-            return number_format($distanceMeters / 1000, 2) . ' km';
+            return number_format($distanceMeters / 1000, 2).' km';
         }
 
-        return number_format($distanceMeters, 0) . ' m';
+        return number_format($distanceMeters, 0).' m';
     }
 
-    /**
-     * Calcular velocidad entre dos puntos en km/h.
-     */
     public function calculateSpeed(float $lat1, float $lon1, float $lat2, float $lon2, int $timeDiffMs): ?float
     {
         if ($timeDiffMs <= 0) {
@@ -108,20 +92,43 @@ class GpsRouteReportService
         return round($distanceKm / $timeHours, 1);
     }
 
-    /**
-     * Obtener tracks filtrados por dispositivo y rango de fechas.
-     */
     public function getTracksForReport(int $deviceId, ?int $startTimeMs = null, ?int $endTimeMs = null): Collection
     {
         $query = GpsTrack::query()
             ->where('device_id', $deviceId)
             ->orderBy('time', 'asc');
 
-        // Solo filtrar por tiempo si se proporcionan los valores
         if ($startTimeMs !== null && $endTimeMs !== null) {
             $query->whereBetween('time', [$startTimeMs, $endTimeMs]);
         }
 
         return $query->get();
+    }
+
+    public function segmentTracks(Collection $points, int $gapMs = self::SEGMENT_GAP_MS): array
+    {
+        if ($points->count() === 0) {
+            return [];
+        }
+
+        $segments = [];
+        $currentSegment = [$points[0]];
+
+        for ($i = 1; $i < $points->count(); $i++) {
+            $prevTime = (int) $points[$i - 1]->time;
+            $currentTime = (int) $points[$i]->time;
+            $gap = $currentTime - $prevTime;
+
+            if ($gap > $gapMs) {
+                $segments[] = collect($currentSegment);
+                $currentSegment = [];
+            }
+
+            $currentSegment[] = $points[$i];
+        }
+
+        $segments[] = collect($currentSegment);
+
+        return $segments;
     }
 }
