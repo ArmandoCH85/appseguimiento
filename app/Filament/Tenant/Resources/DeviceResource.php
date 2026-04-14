@@ -7,9 +7,11 @@ namespace App\Filament\Tenant\Resources;
 use App\Filament\Tenant\Resources\DeviceResource\Pages;
 use App\Models\Tenant\Device;
 use App\Models\Tenant\User;
+use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Actions\DeleteAction;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\TextInput\Actions\CopyAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Placeholder;
 use Filament\Resources\Resource;
@@ -72,7 +74,25 @@ class DeviceResource extends Resource
                         ->regex('/^[0-9]{15}$/')
                         ->placeholder('Ej: 123456789012345')
                         ->columnSpanFull()
-                        ->helperText('Ingresá manualmente el IMEI del dispositivo.'),
+                        ->suffixActions([
+                            Action::make('generate_imei')
+                                ->label('Generar')
+                                ->icon('heroicon-o-arrow-path')
+                                ->color('gray')
+                                ->action(function ($set, $livewire, $component): void {
+                                    $imei = Device::generateUniqueImei();
+
+                                    $set($component, $imei);
+                                    $livewire->dispatch('imei-generated', imei: $imei);
+                                }),
+                            CopyAction::make()
+                                ->copyMessage('IMEI copiado')
+                                ->visible(fn ($state): bool => filled($state)),
+                        ])
+                        ->extraAlpineAttributes([
+                            'x-on:imei-generated.window' => 'if ($event.detail?.imei) { window.navigator.clipboard.writeText($event.detail.imei); $tooltip("IMEI copiado", { theme: $store.theme, timeout: 2000 }) }',
+                        ])
+                        ->helperText('Ingresá manualmente el IMEI o generá uno (opcional).'),
                 ]),
         ]);
     }
