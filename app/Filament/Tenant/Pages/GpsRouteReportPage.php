@@ -28,6 +28,8 @@ class GpsRouteReportPage extends Page
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-map';
 
+    protected static string|\UnitEnum|null $navigationGroup = 'Monitoreo GPS';
+
     protected static ?string $navigationLabel = 'Reporte de Recorrido';
 
     protected static ?string $title = 'Reporte de Recorrido';

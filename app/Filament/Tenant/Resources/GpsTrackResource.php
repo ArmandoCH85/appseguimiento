@@ -24,6 +24,8 @@ class GpsTrackResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-map-pin';
 
+    protected static string|\UnitEnum|null $navigationGroup = 'Monitoreo GPS';
+
     protected static ?string $navigationLabel = 'Rastreo GPS';
 
     protected static ?string $modelLabel = 'Punto GPS';

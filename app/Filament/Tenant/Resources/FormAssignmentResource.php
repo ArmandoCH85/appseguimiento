@@ -27,6 +27,8 @@ class FormAssignmentResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-link';
 
+    protected static string|\UnitEnum|null $navigationGroup = 'Formularios';
+
     protected static ?string $navigationLabel = 'Asignaciones';
 
     protected static ?string $modelLabel = 'Asignación';

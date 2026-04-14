@@ -25,6 +25,8 @@ class SubmissionResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-document-check';
 
+    protected static string|\UnitEnum|null $navigationGroup = 'Formularios';
+
     protected static ?string $navigationLabel = 'Respuestas';
 
     protected static ?string $modelLabel = 'Respuesta';

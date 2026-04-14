@@ -24,6 +24,8 @@ class DeviceResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-device-phone-mobile';
 
+    protected static string|\UnitEnum|null $navigationGroup = 'Monitoreo GPS';
+
     protected static ?string $navigationLabel = 'Dispositivos';
 
     protected static ?string $modelLabel = 'Dispositivo';

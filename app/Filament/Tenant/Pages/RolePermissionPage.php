@@ -35,7 +35,7 @@ class RolePermissionPage extends Page
 
     protected static ?string $navigationLabel = 'Permisos';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Configuración';
+    protected static string|\UnitEnum|null $navigationGroup = 'Administración';
 
     protected static ?int $navigationSort = 50;
 
