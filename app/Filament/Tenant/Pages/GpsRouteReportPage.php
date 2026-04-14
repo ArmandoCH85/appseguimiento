@@ -9,17 +9,19 @@ use App\Models\Tenant\Device;
 use App\Models\Tenant\GpsTrack;
 use App\Services\GpsRouteReportService;
 use Carbon\Carbon;
-use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Form;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use Filament\Support\Enums\Width;
-use Illuminate\Contracts\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 
 class GpsRouteReportPage extends Page
 {
+    protected static ?string $resource = null;
+
     protected string $view = 'filament.tenant.pages.gps-route-report';
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-map';
@@ -32,16 +34,8 @@ class GpsRouteReportPage extends Page
 
     protected Width|string|null $maxContentWidth = Width::Full;
 
-    // Form state
-    public ?string $selectedDeviceId = null;
+    public ?array $data = [];
 
-    public string $dateFilter = 'today';
-
-    public ?string $startDate = null;
-
-    public ?string $endDate = null;
-
-    // Report data
     public array $reportPoints = [];
 
     public array $reportSummary = [];
@@ -58,7 +52,6 @@ class GpsRouteReportPage extends Page
 
     public bool $reportGenerated = false;
 
-    // Pagination
     public int $perPage = 20;
 
     public int $currentPage = 1;
@@ -68,154 +61,101 @@ class GpsRouteReportPage extends Page
         abort_unless(static::canAccess(), 403);
 
         $today = now()->setTimezone('America/Lima')->format('Y-m-d');
-        $this->startDate = $today;
-        $this->endDate = $today;
-    }
-
-    public function updatedSelectedDeviceId(): void
-    {
-        $this->generateReport();
-    }
-
-    public function updatedDateFilter(): void
-    {
-        if (filled($this->selectedDeviceId)) {
-            $this->generateReport();
-        }
-    }
-
-    public function updatedStartDate(): void
-    {
-        if (filled($this->selectedDeviceId) && $this->dateFilter === 'custom') {
-            $this->generateReport();
-        }
-    }
-
-    public function updatedEndDate(): void
-    {
-        if (filled($this->selectedDeviceId) && $this->dateFilter === 'custom') {
-            $this->generateReport();
-        }
-    }
-
-    public function goToPage(int $page): void
-    {
-        $this->currentPage = $page;
-    }
-
-    public function nextPage(): void
-    {
-        if ($this->currentPage < $this->getTotalPages()) {
-            $this->currentPage++;
-        }
-    }
-
-    public function previousPage(): void
-    {
-        if ($this->currentPage > 1) {
-            $this->currentPage--;
-        }
-    }
-
-    public function getPaginatedPoints(): array
-    {
-        $offset = ($this->currentPage - 1) * $this->perPage;
-        return array_slice($this->reportPoints, $offset, $this->perPage);
-    }
-
-    public function getTotalPages(): int
-    {
-        return (int) ceil(count($this->reportPoints) / $this->perPage);
-    }
-
-    public static function canAccess(): bool
-    {
-        return auth()->user()?->hasPermissionTo('devices.view') ?? false;
-    }
-
-    public static function shouldRegisterNavigation(): bool
-    {
-        return static::canAccess();
-    }
-
-    public function getTitle(): string
-    {
-        return 'Reporte de Recorrido';
-    }
-
-    public function form(Form $form): Form
-    {
-        return $form->schema([
-            Select::make('selectedDeviceId')
-                ->label('Dispositivo')
-                ->options(function (): array {
-                    return Device::query()
-                        ->with('user')
-                        ->orderBy('imei')
-                        ->get()
-                        ->mapWithKeys(function (Device $device): array {
-                            $label = $device->imei;
-                            if ($device->user) {
-                                $label .= ' · ' . $device->user->name;
-                            }
-                            return [$device->id => $label];
-                        })
-                        ->all();
-                })
-                ->searchable()
-                ->placeholder('Seleccioná un dispositivo')
-                ->live(),
-
-            Select::make('dateFilter')
-                ->label('Período')
-                ->options([
-                    'today' => 'Hoy',
-                    'yesterday' => 'Ayer',
-                    'custom' => 'Personalizado',
-                ])
-                ->default('today')
-                ->live()
-                ->required(),
-
-            DatePicker::make('startDate')
-                ->label('Fecha inicio')
-                ->visible(fn(callable $get): bool => $get('dateFilter') === 'custom')
-                ->required(fn(callable $get): bool => $get('dateFilter') === 'custom'),
-
-            DatePicker::make('endDate')
-                ->label('Fecha fin')
-                ->visible(fn(callable $get): bool => $get('dateFilter') === 'custom')
-                ->required(fn(callable $get): bool => $get('dateFilter') === 'custom'),
+        $this->form->fill([
+            'selectedDeviceId' => null,
+            'dateFilter' => 'today',
+            'startDate' => $today,
+            'endDate' => $today,
         ]);
+    }
+
+    public function form(Schema $schema): Schema
+    {
+        return $schema
+            ->statePath('data')
+            ->components([
+                Section::make('Filtros del Reporte')
+                    ->icon('heroicon-o-map')
+                    ->schema([
+                        Grid::make(12)
+                            ->schema([
+                                Select::make('selectedDeviceId')
+                                    ->label('Dispositivo')
+                                    ->columnSpan(4)
+                                    ->options(function (): array {
+                                        return Device::query()
+                                            ->with('user')
+                                            ->orderBy('imei')
+                                            ->get()
+                                            ->mapWithKeys(fn (Device $device): array => [
+                                                $device->id => $device->imei.($device->user ? ' · '.$device->user->name : ''),
+                                            ])
+                                            ->all();
+                                    })
+                                    ->searchable()
+                                    ->placeholder('Seleccioná un dispositivo')
+                                    ->live()
+                                    ->afterStateUpdated(fn () => $this->generateReport()),
+
+                                Select::make('dateFilter')
+                                    ->label('Período')
+                                    ->columnSpan(3)
+                                    ->options([
+                                        'today' => 'Hoy',
+                                        'yesterday' => 'Ayer',
+                                        'custom' => 'Personalizado',
+                                    ])
+                                    ->default('today')
+                                    ->live()
+                                    ->afterStateUpdated(fn () => $this->generateReport())
+                                    ->required(),
+
+                                DatePicker::make('startDate')
+                                    ->label('Fecha inicio')
+                                    ->columnSpan(2)
+                                    ->visible(fn (callable $get): bool => $get('dateFilter') === 'custom')
+                                    ->required(fn (callable $get): bool => $get('dateFilter') === 'custom')
+                                    ->live()
+                                    ->afterStateUpdated(fn () => $this->generateReport()),
+
+                                DatePicker::make('endDate')
+                                    ->label('Fecha fin')
+                                    ->columnSpan(2)
+                                    ->visible(fn (callable $get): bool => $get('dateFilter') === 'custom')
+                                    ->required(fn (callable $get): bool => $get('dateFilter') === 'custom')
+                                    ->live()
+                                    ->afterStateUpdated(fn () => $this->generateReport()),
+                            ]),
+                    ]),
+            ]);
     }
 
     public function generateReport(): void
     {
-        if (blank($this->selectedDeviceId)) {
+        $data = $this->form->getState();
+
+        if (blank($data['selectedDeviceId'] ?? null)) {
             return;
         }
 
-        $device = Device::query()->with('user')->find($this->selectedDeviceId);
+        $device = Device::query()->with('user')->find($data['selectedDeviceId']);
 
-        if (!$device) {
+        if (! $device) {
             return;
         }
 
-        // Calculate date range
-        // Por defecto trae TODO el recorrido del dispositivo (sin filtro de tiempo)
-        $reportService = app(GpsRouteReportService::class);
-        $points = $reportService->getTracksForReport((int) $this->selectedDeviceId);
+        $reportService = $this->getReportService();
+        [$startTimeMs, $endTimeMs] = $this->getTimeRange($data);
+        $points = $reportService->getTracksForReport((int) $data['selectedDeviceId'], $startTimeMs, $endTimeMs);
 
-        logger()->info('GPS Report Result', ['count' => $points->count()]);
+        logger()->info('GPS Report Result', ['count' => $points->count(), 'range' => [$startTimeMs, $endTimeMs]]);
 
-        // Format points for map and table
         $this->reportPoints = $points->map(function (GpsTrack $track, int $index) use ($points, $reportService): array {
             $timeHuman = now()
                 ->setTimestamp((int) ($track->time / 1000))
                 ->setTimezone('America/Lima')
                 ->format('d/m/Y H:i:s');
 
-            // Calculate speed
             $speed = null;
             $speedHuman = '-';
             if ($index > 0) {
@@ -244,7 +184,6 @@ class GpsRouteReportPage extends Page
             ];
         })->all();
 
-        // Calculate summary
         $distance = $points->count() > 1 ? $reportService->calculateTotalDistance($points) : 0;
         $duration = $reportService->calculateDuration($points);
 
@@ -252,10 +191,10 @@ class GpsRouteReportPage extends Page
         $this->distanceFormatted = $reportService->formatDistance($distance);
         $this->durationFormatted = $reportService->formatDuration($duration);
         $this->reportGenerated = $points->count() > 0;
+        $this->currentPage = 1;
 
         $this->dispatch('gps-report-generated');
 
-        // First and last time
         if ($points->count() > 0) {
             $this->firstTimeFormatted = now()
                 ->setTimestamp((int) ($points->first()->time / 1000))
@@ -268,11 +207,10 @@ class GpsRouteReportPage extends Page
                 ->format('d/m/Y H:i:s');
         }
 
-        // Store summary for export
-        $periodLabel = match ($this->dateFilter) {
-            'today' => 'Hoy (' . now()->setTimezone('America/Lima')->format('d/m/Y') . ')',
-            'yesterday' => 'Ayer (' . now()->setTimezone('America/Lima')->subDay()->format('d/m/Y') . ')',
-            'custom' => ($this->startDate ?? '') . ' → ' . ($this->endDate ?? ''),
+        $periodLabel = match ($data['dateFilter']) {
+            'today' => 'Hoy ('.now()->setTimezone('America/Lima')->format('d/m/Y').')',
+            'yesterday' => 'Ayer ('.now()->setTimezone('America/Lima')->subDay()->format('d/m/Y').')',
+            'custom' => ($data['startDate'] ?? '').' → '.($data['endDate'] ?? ''),
         };
 
         $this->reportSummary = [
@@ -287,39 +225,95 @@ class GpsRouteReportPage extends Page
 
     public function exportToExcel(): void
     {
-        if (blank($this->selectedDeviceId) || empty($this->reportPoints)) {
+        $data = $this->form->getState();
+
+        if (blank($data['selectedDeviceId'] ?? null) || empty($this->reportPoints)) {
             return;
         }
 
-        $reportService = app(GpsRouteReportService::class);
+        $reportService = $this->getReportService();
 
-        // Rebuild points collection for export
         $points = collect($this->reportPoints)->map(function (array $point): object {
-            $obj = new \stdClass();
+            $obj = new \stdClass;
             $obj->latitude = $point['latitude'];
             $obj->longitude = $point['longitude'];
             $obj->accuracy = $point['accuracy'];
             $obj->time = $point['time'];
+
             return $obj;
         });
 
         $export = new GpsTrackExport($this->reportSummary, $points, $reportService);
 
-        $fileName = 'recorrido_' . ($this->reportSummary['imei'] ?? 'dispositivo') . '_' . now()->format('Y-m-d_His') . '.xlsx';
+        $fileName = 'recorrido_'.($this->reportSummary['imei'] ?? 'dispositivo').'_'.now()->format('Y-m-d_His').'.xlsx';
 
         Excel::download($export, $fileName);
     }
 
-    /**
-     * Get the time range in milliseconds based on the date filter.
-     */
-    protected function getTimeRange(): array
+    public function goToPage(int $page): void
+    {
+        $this->currentPage = $page;
+    }
+
+    public function nextPage(): void
+    {
+        if ($this->currentPage < $this->getTotalPages()) {
+            $this->currentPage++;
+        }
+    }
+
+    public function previousPage(): void
+    {
+        if ($this->currentPage > 1) {
+            $this->currentPage--;
+        }
+    }
+
+    public function getPaginatedPoints(): array
+    {
+        $offset = ($this->currentPage - 1) * $this->perPage;
+
+        return array_slice($this->reportPoints, $offset, $this->perPage);
+    }
+
+    public function getTotalPages(): int
+    {
+        return (int) ceil(count($this->reportPoints) / $this->perPage);
+    }
+
+    public static function canAccess(): bool
+    {
+        return auth()->user()?->hasPermissionTo('devices.view') ?? false;
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return static::canAccess();
+    }
+
+    public function getTitle(): string
+    {
+        return 'Reporte de Recorrido';
+    }
+
+    private function getReportService(): GpsRouteReportService
+    {
+        static $service;
+
+        return $service ??= app(GpsRouteReportService::class);
+    }
+
+    private function getTimeRange(array $data): array
     {
         $tz = 'America/Lima';
+        $dateFilter = $data['dateFilter'] ?? 'today';
+        $startDate = $data['startDate'] ?? null;
+        $endDate = $data['endDate'] ?? null;
 
-        return match ($this->dateFilter) {
+        return match ($dateFilter) {
             'today' => (function () use ($tz): array {
                 $today = now()->setTimezone($tz)->startOfDay();
+
                 return [
                     (int) $today->copy()->timestamp * 1000,
                     (int) $today->copy()->endOfDay()->timestamp * 1000,
@@ -327,33 +321,25 @@ class GpsRouteReportPage extends Page
             })(),
             'yesterday' => (function () use ($tz): array {
                 $yesterday = now()->setTimezone($tz)->subDay()->startOfDay();
+
                 return [
                     (int) $yesterday->copy()->timestamp * 1000,
                     (int) $yesterday->copy()->endOfDay()->timestamp * 1000,
                 ];
             })(),
-            'custom' => (function () use ($tz): array {
-                $start = $this->startDate
-                    ? Carbon::createFromFormat('Y-m-d', $this->startDate, $tz)->startOfDay()
+            'custom' => (function () use ($tz, $startDate, $endDate): array {
+                $start = $startDate
+                    ? Carbon::createFromFormat('Y-m-d', $startDate, $tz)->startOfDay()
                     : now()->setTimezone($tz)->startOfDay();
-                $end = $this->endDate
-                    ? Carbon::createFromFormat('Y-m-d', $this->endDate, $tz)->endOfDay()
+                $end = $endDate
+                    ? Carbon::createFromFormat('Y-m-d', $endDate, $tz)->endOfDay()
                     : now()->setTimezone($tz)->endOfDay();
+
                 return [
                     (int) $start->timestamp * 1000,
                     (int) $end->timestamp * 1000,
                 ];
             })(),
         };
-    }
-
-    protected function getViewData(): array
-    {
-        return [
-            'devices' => Device::query()
-                ->with('user')
-                ->orderBy('imei')
-                ->get(),
-        ];
     }
 }

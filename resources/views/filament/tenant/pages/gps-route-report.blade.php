@@ -138,96 +138,24 @@
     </style>
 
     <div class="space-y-4">
-        {{-- HEADER: Filtros --}}
-        <x-filament::section>
-            <x-slot name="heading">
-                <div class="flex items-center gap-2">
-                    <x-filament::icon icon="heroicon-o-map" class="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                    <span>Filtros del Reporte</span>
-                </div>
-            </x-slot>
+        {{-- FILTROS: Formulario Filament v5 --}}
+        {{ $this->form }}
 
-            <div class="grid grid-cols-1 gap-4 lg:grid-cols-12">
-                {{-- Dispositivo --}}
-                <div class="lg:col-span-4">
-                    <label for="gps-report-device" class="text-sm font-medium text-gray-950 dark:text-white">
-                        Dispositivo
-                    </label>
-                    <div class="mt-2">
-                        <x-filament::input.wrapper>
-                            <x-filament::input.select id="gps-report-device" wire:model.live="selectedDeviceId">
-                                <option value="">— Seleccioná un dispositivo —</option>
-                                @foreach($devices as $device)
-                                    <option value="{{ $device->id }}">
-                                        {{ $device->imei }}{{ $device->user ? ' · ' . $device->user->name : '' }}
-                                    </option>
-                                @endforeach
-                            </x-filament::input.select>
-                        </x-filament::input.wrapper>
-                    </div>
-                </div>
+        <div class="flex flex-wrap items-center gap-3">
+            <x-filament::button wire:click="generateReport" icon="heroicon-m-magnifying-glass" color="primary">
+                Generar Reporte
+            </x-filament::button>
 
-                {{-- Período --}}
-                <div class="lg:col-span-3">
-                    <label for="gps-report-period" class="text-sm font-medium text-gray-950 dark:text-white">
-                        Período
-                    </label>
-                    <div class="mt-2">
-                        <x-filament::input.wrapper>
-                            <x-filament::input.select id="gps-report-period" wire:model.live="dateFilter">
-                                <option value="today">Hoy</option>
-                                <option value="yesterday">Ayer</option>
-                                <option value="custom">Personalizado</option>
-                            </x-filament::input.select>
-                        </x-filament::input.wrapper>
-                    </div>
-                </div>
-
-                {{-- Fecha personalizado --}}
-                @if($dateFilter === 'custom')
-                    <div class="lg:col-span-2">
-                        <label for="gps-report-start" class="text-sm font-medium text-gray-950 dark:text-white">
-                            Fecha inicio
-                        </label>
-                        <div class="mt-2">
-                            <x-filament::input.wrapper>
-                                <x-filament::input type="date" id="gps-report-start" wire:model.live="startDate" />
-                            </x-filament::input.wrapper>
-                        </div>
-                    </div>
-                    <div class="lg:col-span-2">
-                        <label for="gps-report-end" class="text-sm font-medium text-gray-950 dark:text-white">
-                            Fecha fin
-                        </label>
-                        <div class="mt-2">
-                            <x-filament::input.wrapper>
-                                <x-filament::input type="date" id="gps-report-end" wire:model.live="endDate" />
-                            </x-filament::input.wrapper>
-                        </div>
-                    </div>
-                @else
-                    <div class="hidden lg:block lg:col-span-2"></div>
-                    <div class="hidden lg:block lg:col-span-2"></div>
-                @endif
-            </div>
-
-            {{-- Botones --}}
-            <div class="mt-4 flex flex-wrap items-center gap-3">
-                <x-filament::button wire:click="generateReport" icon="heroicon-m-magnifying-glass" color="primary">
-                    Generar Reporte
+            @if($reportGenerated && !empty($reportPoints))
+                <x-filament::button wire:click="exportToExcel" icon="heroicon-m-arrow-down-tray" color="success" outlined>
+                    Exportar Excel
                 </x-filament::button>
+            @endif
 
-                @if($reportGenerated && !empty($reportPoints))
-                    <x-filament::button wire:click="exportToExcel" icon="heroicon-m-arrow-down-tray" color="success" outlined>
-                        Exportar Excel
-                    </x-filament::button>
-                @endif
-
-                <div wire:loading wire:target="generateReport,exportToExcel">
-                    <x-filament::loading-indicator class="h-5 w-5 text-primary-500" />
-                </div>
+            <div wire:loading wire:target="generateReport,exportToExcel">
+                <x-filament::loading-indicator class="h-5 w-5 text-primary-500" />
             </div>
-        </x-filament::section>
+        </div>
 
         {{-- MAPA --}}
         @if($reportGenerated)
@@ -256,9 +184,15 @@
                     <div class="rounded-lg border border-gray-200/80 bg-gray-50 px-4 py-3 dark:border-white/10 dark:bg-white/[0.03]">
                         <p class="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Período</p>
                         <p class="mt-1 text-sm font-semibold text-gray-950 dark:text-white">
+                            @php
+                                $formData = $this->form->getState();
+                                $dateFilter = $formData['dateFilter'] ?? 'today';
+                                $startDate = $formData['startDate'] ?? '';
+                                $endDate = $formData['endDate'] ?? '';
+                            @endphp
                             @if($dateFilter === 'today') Hoy
                             @elseif($dateFilter === 'yesterday') Ayer
-                            @else {{ $startDate ?? '' }} → {{ $endDate ?? '' }}
+                            @else {{ $startDate }} → {{ $endDate }}
                             @endif
                         </p>
                     </div>
@@ -318,7 +252,7 @@
                     </div>
                 </x-slot>
                 <x-slot name="description">
-                    {{ $reportSummary['imei'] ?? '' }}{{ $reportSummary['user_name'] ? ' · ' . $reportSummary['user_name'] : '' }}
+                    {{ $reportSummary['imei'] ?? '' }}{{ ($reportSummary['user_name'] ?? '') ? ' · ' . $reportSummary['user_name'] : '' }}
                     — {{ $reportSummary['period'] ?? '' }}
                 </x-slot>
 
@@ -450,6 +384,12 @@
                     return window.__gpsReportMap;
                 }
 
+                const container = document.getElementById('gps-report-map');
+                if (!container) {
+                    console.warn('Map container not found, waiting...');
+                    return null;
+                }
+
                 const map = L.map('gps-report-map', { zoomControl: true }).setView(defaultCenter, 12);
 
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -522,20 +462,12 @@
             }
 
             function bootMap() {
-                if (window.L) {
-                    ensureMap();
-                    updateMap(getState().points);
+                const map = ensureMap();
+                if (!map) {
+                    setTimeout(bootMap, 300);
                     return;
                 }
-
-                const script = document.createElement('script');
-                script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-                script.onload = function () {
-                    ensureMap();
-                    updateMap(getState().points);
-                };
-
-                document.head.appendChild(script);
+                updateMap(getState().points);
             }
 
             if (!window.__gpsReportPageBooted) {
@@ -554,22 +486,16 @@
                 }, 0);
             }
 
-            // Listen for Livewire event after report generation
             document.addEventListener('livewire:initialized', function () {
                 Livewire.on('gps-report-generated', function () {
-                    setTimeout(function () {
-                        if (window.L) {
-                            // Destroy and recreate map
-                            if (window.__gpsReportMap) {
-                                window.__gpsReportMap.remove();
-                                window.__gpsReportMap = null;
-                                window.__gpsReportPath = null;
-                                window.__gpsReportStartMarker = null;
-                                window.__gpsReportEndMarker = null;
-                            }
-                            bootMap();
-                        }
-                    }, 300);
+                    if (window.__gpsReportMap) {
+                        window.__gpsReportMap.remove();
+                        window.__gpsReportMap = null;
+                        window.__gpsReportPath = null;
+                        window.__gpsReportStartMarker = null;
+                        window.__gpsReportEndMarker = null;
+                    }
+                    bootMap();
                 });
             });
         })();
