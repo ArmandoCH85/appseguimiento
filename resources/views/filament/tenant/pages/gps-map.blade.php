@@ -194,7 +194,7 @@
     <div class="space-y-4">
         {{-- HEADER: Solo selector y estado --}}
         <x-filament::section>
-            <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
                 <div class="min-w-0 flex-1">
                     <label for="gps-device-select" class="text-sm font-medium text-gray-950 dark:text-white">
                         Dispositivo
@@ -219,15 +219,14 @@
                         <x-filament::badge color="success" icon="heroicon-m-signal" size="sm" class="shrink-0">
                             En vivo
                         </x-filament::badge>
-                        <div class="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
-                            <span class="font-medium">Panel</span>
-                            <span class="font-mono font-semibold tabular-nums text-gray-950 dark:text-white">{{ $lastUpdatedAt }}</span>
-                            @if($deviceGpsTime)
-                                <span class="mx-1 h-3 w-px bg-gray-200 dark:bg-white/10"></span>
-                                <span class="font-medium">GPS</span>
-                                <span class="font-mono font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">{{ $deviceGpsTime }}</span>
-                            @endif
-                        </div>
+                        <x-filament::badge color="gray" icon="heroicon-m-clock" size="sm" class="shrink-0">
+                            Panel: <span class="font-mono tabular-nums">{{ $lastUpdatedAt }}</span>
+                        </x-filament::badge>
+                        @if($deviceGpsTime)
+                            <x-filament::badge color="info" icon="heroicon-m-device-phone-mobile" size="sm" class="shrink-0">
+                                GPS: <span class="font-mono tabular-nums">{{ $deviceGpsTime }}</span>
+                            </x-filament::badge>
+                        @endif
                     @else
                         <x-filament::badge color="gray" icon="heroicon-m-signal-slash" size="sm" class="shrink-0">
                             Sin dispositivo
