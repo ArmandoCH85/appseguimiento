@@ -110,12 +110,20 @@ class ListSubmissions extends ListRecords
 
         foreach ($responses as $response) {
             $label = $response->field_name;
-            $value = $response->value;
+            $value = $response->value ?? '';
 
-            // Si el valor es JSON (checkbox múltiple), decodificarlo
-            $decoded = json_decode($value, true);
-            if (is_array($decoded)) {
-                $value = implode(', ', $decoded);
+            // Si el valor es un string JSON (checkbox múltiple), decodificarlo
+            if (is_string($value)) {
+                $decoded = json_decode($value, true);
+                if (is_array($decoded)) {
+                    $value = implode(', ', $decoded);
+                }
+            } elseif (is_array($value)) {
+                // Por si el modelo ya casteó el JSON a array
+                $value = implode(', ', $value);
+            } else {
+                // Asegurar que sea string para las siguientes operaciones
+                $value = (string) $value;
             }
 
             // Limpiar el valor para el CSV
