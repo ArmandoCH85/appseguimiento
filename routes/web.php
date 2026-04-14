@@ -10,7 +10,7 @@ Route::get('/', function () {
 Route::get('/api/verify-domain', function (\Illuminate\Http\Request $request) {
     $domain = $request->query('domain');
 
-    if ($domain === 'amsolutions.lat') {
+    if ($domain === 'drroutex.pe') {
         return response('OK', 200);
     }
 

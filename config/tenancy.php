@@ -21,6 +21,7 @@ return [
         'localhost',
         'appseguimiento.test',
         'amsolutions.lat',
+        'drroutex.pe',
     ], array_filter(array_map('trim', explode(',', env('CENTRAL_DOMAINS', ''))))),
 
     /**
