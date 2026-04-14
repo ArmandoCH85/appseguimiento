@@ -194,13 +194,13 @@
     <div class="space-y-4">
         {{-- HEADER: Solo selector y estado --}}
         <x-filament::section>
-            <div class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+            <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                 <div class="min-w-0 flex-1">
                     <label for="gps-device-select" class="text-sm font-medium text-gray-950 dark:text-white">
                         Dispositivo
                     </label>
 
-                    <div class="mt-2 max-w-xl">
+                    <div class="mt-2 max-w-xl pb-4 lg:pb-0">
                         <x-filament::input.wrapper>
                             <x-filament::input.select id="gps-device-select" wire:model.live="selectedDeviceId">
                                 <option value="">— Selecciona un dispositivo —</option>
