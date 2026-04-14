@@ -214,12 +214,12 @@
                     </div>
                 </div>
 
-                <div class="flex flex-wrap items-center gap-3">
+                <div class="flex min-w-0 items-center gap-3 overflow-x-auto whitespace-nowrap">
                     @if($selectedDeviceId)
-                        <x-filament::badge color="success" icon="heroicon-m-signal">
+                        <x-filament::badge color="success" icon="heroicon-m-signal" class="shrink-0">
                             En vivo
                         </x-filament::badge>
-                        <div class="inline-flex max-w-full items-center gap-2 overflow-x-auto text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                        <div class="inline-flex min-w-0 flex-1 items-center gap-2 overflow-x-auto text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
                             <x-filament::icon icon="heroicon-m-clock" class="h-4 w-4 text-gray-500 dark:text-gray-400" />
                             <span class="font-medium">Panel</span>
                             <span class="font-mono font-semibold tabular-nums text-gray-950 dark:text-white">{{ $lastUpdatedAt }}</span>
@@ -236,7 +236,7 @@
                         </x-filament::badge>
                     @endif
 
-                    <div wire:loading wire:target="refreshPoints,updatedSelectedDeviceId">
+                    <div wire:loading wire:target="refreshPoints,updatedSelectedDeviceId" class="shrink-0">
                         <x-filament::loading-indicator class="h-5 w-5 text-primary-500" />
                     </div>
                 </div>
