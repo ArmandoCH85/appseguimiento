@@ -400,19 +400,21 @@
         window.__gpsReportPoints = @json($reportPoints);
         window.__gpsReportSegments = @json($reportSegments);
 
-        // Player state
-        window.__gpsPlayer = {
-            playing: false,
-            currentIndex: 0,
-            speed: 1,
-            intervalId: null,
-            trackerMarker: null,
-            allCoords: [],
-            points: [],
-            baseDelayMs: 500,
-        };
+        if (!window.__gpsPlayer) {
+            window.__gpsPlayer = {
+                playing: false,
+                currentIndex: 0,
+                speed: 1,
+                intervalId: null,
+                trackerMarker: null,
+                allCoords: [],
+                points: [],
+                baseDelayMs: 500,
+            };
+        }
 
         function initOrUpdateMap(points, segments) {
+            var p = window.__gpsPlayer;
             var defaultCenter = [-12.046374, -77.042793];
 
             function toCoords(pts) {
@@ -450,6 +452,14 @@
                 });
             }
 
+            // Stop player BEFORE destroying map so marker references are still valid
+            if (p.intervalId) {
+                clearTimeout(p.intervalId);
+                p.intervalId = null;
+            }
+            p.playing = false;
+            p.currentIndex = 0;
+
             if (window.__gpsReportMap) {
                 window.__gpsReportMap.remove();
                 window.__gpsReportMap = null;
@@ -458,8 +468,8 @@
             window.__gpsReportStartMarker = null;
             window.__gpsReportEndMarker = null;
 
-            // Reset player
-            stopPlayer();
+            // Clear stale tracker marker reference (old map was removed)
+            p.trackerMarker = null;
 
             var container = document.getElementById('gps-report-map');
             if (!container) return;
@@ -532,8 +542,6 @@
                 }
             }
 
-            // Setup player
-            var p = window.__gpsPlayer;
             p.allCoords = allCoords;
             p.points = points || [];
             p.currentIndex = 0;
@@ -549,10 +557,7 @@
                 counter.textContent = '0/' + allCoords.length;
             }
 
-            // Create tracker marker
-            if (p.trackerMarker) {
-                p.trackerMarker = null;
-            }
+            // Create tracker marker on the new map
             if (allCoords.length > 0) {
                 p.trackerMarker = L.marker(allCoords[0], { icon: trackerIcon() }).addTo(map);
                 p.trackerMarker.setOpacity(0);
@@ -565,10 +570,10 @@
             bindPlayerEvents();
         }
 
-        // Player controls
         function startPlayer() {
             var p = window.__gpsPlayer;
             if (p.allCoords.length === 0) return;
+            if (!p.trackerMarker) return;
 
             p.playing = true;
             updatePlayButton();
@@ -608,6 +613,7 @@
         function advancePlayer() {
             var p = window.__gpsPlayer;
             if (!p.playing) return;
+            if (!p.trackerMarker) return;
 
             if (p.currentIndex >= p.allCoords.length) {
                 pausePlayer();
@@ -631,13 +637,14 @@
         function seekPlayer(index) {
             var p = window.__gpsPlayer;
             if (index < 0 || index >= p.allCoords.length) return;
+            if (!p.trackerMarker) return;
 
             p.currentIndex = index;
-            if (p.trackerMarker) {
-                p.trackerMarker.setLatLng(p.allCoords[index]);
-                p.trackerMarker.setOpacity(1);
-            }
+            p.trackerMarker.setLatLng(p.allCoords[index]);
+            p.trackerMarker.setOpacity(1);
 
+            var slider = document.getElementById('gps-player-slider');
+            if (slider) slider.value = String(index);
             var counter = document.getElementById('gps-player-counter');
             if (counter) counter.textContent = (index + 1) + '/' + p.allCoords.length;
 
@@ -672,47 +679,40 @@
             }
         }
 
-        // Bind player events — called after map init to ensure DOM exists
         function bindPlayerEvents() {
             var playBtn = document.getElementById('gps-player-play');
             var resetBtn = document.getElementById('gps-player-reset');
             var slider = document.getElementById('gps-player-slider');
             var speedBtns = document.querySelectorAll('.speed-btn');
 
-            if (playBtn && !playBtn.__gpsBound) {
-                playBtn.__gpsBound = true;
-                playBtn.addEventListener('click', function() {
+            if (playBtn) {
+                playBtn.onclick = function() {
                     if (window.__gpsPlayer.playing) {
                         pausePlayer();
                     } else {
                         startPlayer();
                     }
-                });
+                };
             }
 
-            if (resetBtn && !resetBtn.__gpsBound) {
-                resetBtn.__gpsBound = true;
-                resetBtn.addEventListener('click', function() {
+            if (resetBtn) {
+                resetBtn.onclick = function() {
                     stopPlayer();
-                });
+                };
             }
 
-            if (slider && !slider.__gpsBound) {
-                slider.__gpsBound = true;
-                slider.addEventListener('input', function(e) {
+            if (slider) {
+                slider.oninput = function(e) {
                     seekPlayer(parseInt(e.target.value, 10));
-                });
+                };
             }
 
             if (speedBtns.length > 0) {
                 speedBtns.forEach(function(btn) {
-                    if (btn.__gpsBound) return;
-                    btn.__gpsBound = true;
-                    btn.addEventListener('click', function() {
+                    btn.onclick = function() {
                         setSpeed(parseInt(btn.dataset.speed, 10));
-                    });
+                    };
                 });
-                // Default 1x active
                 speedBtns[0].classList.add('active');
             }
         }
