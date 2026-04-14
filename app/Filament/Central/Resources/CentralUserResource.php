@@ -30,7 +30,13 @@ class CentralUserResource extends Resource
     {
         return $schema->schema([
             TextInput::make('name')->label('Nombre')->required()->maxLength(255),
-            TextInput::make('email')->label('Email')->required()->email()->unique(ignoreRecord: true),
+            TextInput::make('email')
+                ->label('Email')
+                ->required()
+                ->email()
+                ->unique(ignoreRecord: true)
+                ->disabled(fn (string $operation): bool => $operation === 'edit')
+                ->helperText('No se puede modificar después de la creación.'),
             TextInput::make('password')
                 ->label('Contraseña')
                 ->password()
