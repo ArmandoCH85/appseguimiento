@@ -58,8 +58,8 @@
         }
 
         #gps-report-map {
-            height: 65dvh;
-            min-height: 28rem;
+            height: 78dvh;
+            min-height: 32rem;
             width: 100%;
             z-index: 0;
         }
@@ -227,102 +227,6 @@
                 @endif
             </div>
         </x-filament::section>
-
-        @if($reportGenerated)
-            {{-- TABLA DE ACTIVIDAD --}}
-            <x-filament::section>
-                <x-slot name="heading">
-                    <div class="flex items-center gap-2">
-                        <x-filament::icon icon="heroicon-o-table-cells" class="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                        <span>Actividad del Dispositivo</span>
-                    </div>
-                </x-slot>
-                <x-slot name="description">
-                    {{ $reportSummary['imei'] ?? '' }}{{ ($reportSummary['user_name'] ?? '') ? ' · ' . $reportSummary['user_name'] : '' }}
-                    — {{ $reportSummary['period'] ?? '' }}
-                </x-slot>
-
-                @if(!empty($reportPoints))
-                    <div class="overflow-hidden rounded-lg border border-gray-200 dark:border-white/10">
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200 text-sm dark:divide-white/10">
-                                <thead class="bg-gray-50 dark:bg-white/[0.03]">
-                                    <tr>
-                                        <th class="px-4 py-3 text-left font-semibold text-gray-600 dark:text-gray-400">#</th>
-                                        <th class="px-4 py-3 text-left font-semibold text-gray-600 dark:text-gray-400">Hora GPS</th>
-                                        <th class="px-4 py-3 text-right font-semibold text-gray-600 dark:text-gray-400">Latitud</th>
-                                        <th class="px-4 py-3 text-right font-semibold text-gray-600 dark:text-gray-400">Longitud</th>
-                                        <th class="px-4 py-3 text-center font-semibold text-gray-600 dark:text-gray-400">Precisión</th>
-                                        <th class="px-4 py-3 text-center font-semibold text-gray-600 dark:text-gray-400">Velocidad</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-gray-200 dark:divide-white/10">
-                                    @foreach($this->getPaginatedPoints() as $index => $point)
-                                        @php $globalIndex = ($currentPage - 1) * $perPage + $index + 1; @endphp
-                                        <tr class="@if($loop->first && $currentPage === 1)bg-emerald-50/80 dark:bg-emerald-500/10 @endif hover:bg-gray-50 dark:hover:bg-white/[0.02]">
-                                            <td class="whitespace-nowrap px-4 py-2.5 font-medium text-gray-950 dark:text-white">
-                                                {{ $globalIndex }}
-                                                @if($globalIndex === 1)
-                                                    <x-filament::badge size="xs" color="success" class="ml-1">Inicio</x-filament::badge>
-                                                @endif
-                                            </td>
-                                            <td class="whitespace-nowrap px-4 py-2.5 font-mono text-gray-900 dark:text-white">
-                                                {{ $point['time_human'] }}
-                                            </td>
-                                            <td class="whitespace-nowrap px-4 py-2.5 text-right font-mono text-gray-900 dark:text-white">
-                                                {{ number_format($point['latitude'], 8) }}
-                                            </td>
-                                            <td class="whitespace-nowrap px-4 py-2.5 text-right font-mono text-gray-900 dark:text-white">
-                                                {{ number_format($point['longitude'], 8) }}
-                                            </td>
-                                            <td class="whitespace-nowrap px-4 py-2.5 text-center">
-                                                <x-filament::badge size="xs" color="info">
-                                                    {{ $point['accuracy_human'] }}
-                                                </x-filament::badge>
-                                            </td>
-                                            <td class="whitespace-nowrap px-4 py-2.5 text-center font-medium text-gray-900 dark:text-white">
-                                                {{ $point['speed_human'] }}
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-
-                        {{-- Pagination Controls --}}
-                        @if($this->getTotalPages() > 1)
-                            <div class="flex items-center justify-between border-t border-gray-200 px-4 py-3 dark:border-white/10">
-                                <div class="text-sm text-gray-600 dark:text-gray-400">
-                                    Mostrando {{ ($currentPage - 1) * $perPage + 1 }}–{{ min($currentPage * $perPage, count($reportPoints)) }} de {{ count($reportPoints) }} puntos
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <x-filament::button size="sm" color="gray" outlined wire:click="previousPage" :disabled="$currentPage <= 1">
-                                        Anterior
-                                    </x-filament::button>
-
-                                    @for($i = max(1, $currentPage - 2); $i <= min($this->getTotalPages(), $currentPage + 2); $i++)
-                                        <x-filament::button size="sm" :color="$i === $currentPage ? 'primary' : 'gray'" :outlined="$i !== $currentPage" wire:click="goToPage({{ $i }})">
-                                            {{ $i }}
-                                        </x-filament::button>
-                                    @endfor
-
-                                    <x-filament::button size="sm" color="gray" outlined wire:click="nextPage" :disabled="$currentPage >= $this->getTotalPages()">
-                                        Siguiente
-                                    </x-filament::button>
-                                </div>
-                            </div>
-                        @endif
-                    </div>
-                @else
-                    <div class="rounded-lg border border-gray-200/80 p-8 text-center dark:border-white/10">
-                        <x-filament::icon icon="heroicon-o-map-pin" class="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" />
-                        <p class="mt-3 text-sm font-medium text-gray-600 dark:text-gray-300">
-                            No hay puntos de actividad para mostrar.
-                        </p>
-                    </div>
-                @endif
-            </x-filament::section>
-        @endif
     </div>
 
     <script>
