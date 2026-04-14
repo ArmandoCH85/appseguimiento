@@ -11,6 +11,8 @@ use App\Models\Tenant\SubmissionResponse;
 use Carbon\Carbon;
 use Filament\Forms\Components\DatePicker;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Support\Enums\ActionSize;
+use Filament\Actions\Action as InfolistAction;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -109,7 +111,21 @@ class SubmissionResource extends Resource
                         ->placeholder('Sin datos'),
                     TextEntry::make('longitude')
                         ->label('Longitud')
-                        ->placeholder('Sin datos'),
+                        ->placeholder('Sin datos')
+                        ->suffixAction(
+                            InfolistAction::make('view_map')
+                                ->label('Ver en mapa')
+                                ->icon('heroicon-o-map')
+                                ->color('primary')
+                                ->modalHeading('Ubicación del Envío')
+                                ->modalSubmitAction(false)
+                                ->modalCancelActionLabel('Cerrar')
+                                ->visible(fn (?Submission $record): bool => filled($record?->latitude) && filled($record?->longitude))
+                                ->modalContent(fn (?Submission $record) => view('filament.tenant.components.submission-map', [
+                                    'latitude' => $record?->latitude,
+                                    'longitude' => $record?->longitude,
+                                ]))
+                        ),
                 ])
                 ->columns(2),
 
