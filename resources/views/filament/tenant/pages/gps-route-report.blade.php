@@ -445,8 +445,8 @@
 
             function trackerIcon() {
                 return L.divIcon({
-                    className: 'gps-tracker-icon',
-                    html: '<div style="width:20px;height:20px;background:#2563eb;border:3px solid #fff;border-radius:50%;box-shadow:0 2px 8px rgba(37,99,235,0.5);"></div>',
+                    className: '',
+                    html: '<div class="gps-tracker-icon" style="width:20px;height:20px;background:#2563eb;border:3px solid #fff;border-radius:50%;box-shadow:0 2px 8px rgba(37,99,235,0.5);"></div>',
                     iconSize: [20, 20],
                     iconAnchor: [10, 10],
                 });
