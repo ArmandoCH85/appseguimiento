@@ -236,12 +236,12 @@ class GpsRouteReportPage extends Page
         ];
     }
 
-    public function exportToExcel(): void
+    public function exportToExcel(): \Symfony\Component\HttpFoundation\BinaryFileResponse|null
     {
         $data = $this->form->getState();
 
         if (blank($data['selectedDeviceId'] ?? null) || empty($this->reportPoints)) {
-            return;
+            return null;
         }
 
         $reportService = $this->getReportService();
@@ -260,7 +260,7 @@ class GpsRouteReportPage extends Page
 
         $fileName = 'recorrido_'.($this->reportSummary['imei'] ?? 'dispositivo').'_'.now()->format('Y-m-d_His').'.xlsx';
 
-        Excel::download($export, $fileName);
+        return Excel::download($export, $fileName);
     }
 
     public function goToPage(int $page): void
