@@ -36,19 +36,32 @@ class TenantResource extends Resource
     public static function getBaseDomain(): string
     {
         // Prioridad 1: Clave específica en el config (central_domain leerá de .env)
-        if ($domain = config('tenancy.central_domain')) {
-            return $domain;
+        if (is_string($domain = config('tenancy.central_domain')) && $domain !== '') {
+            return trim($domain);
         }
 
-        // Prioridad 2: Buscar en la lista de central_domains (excluyendo IPs y localhost)
+        // Prioridad 2: Host actual (para que el formulario muestre el dominio real en uso)
+        if (! app()->runningInConsole()) {
+            $host = request()->getHost();
+            if (is_string($host) && $host !== '' && ! filter_var($host, FILTER_VALIDATE_IP) && $host !== 'localhost') {
+                return $host;
+            }
+        }
+
+        // Prioridad 3: APP_URL
+        $appUrlHost = parse_url((string) config('app.url', 'http://localhost'), PHP_URL_HOST);
+        if (is_string($appUrlHost) && $appUrlHost !== '' && ! filter_var($appUrlHost, FILTER_VALIDATE_IP) && $appUrlHost !== 'localhost') {
+            return $appUrlHost;
+        }
+
+        // Prioridad 4: Buscar en la lista de central_domains (excluyendo IPs y localhost)
         foreach (config('tenancy.central_domains', []) as $domain) {
-            if (! filter_var($domain, FILTER_VALIDATE_IP) && $domain !== 'localhost') {
+            if (is_string($domain) && $domain !== '' && ! filter_var($domain, FILTER_VALIDATE_IP) && $domain !== 'localhost') {
                 return $domain;
             }
         }
 
-        // Fallback: APP_URL
-        return parse_url(config('app.url', 'http://localhost'), PHP_URL_HOST) ?? 'localhost';
+        return 'localhost';
     }
 
     public static function form(Schema $schema): Schema

@@ -16,15 +16,19 @@ return [
      *
      * Only relevant if you're using the domain or subdomain identification middleware.
      */
-    'central_domains' => array_merge([
-        '127.0.0.1',
-        'localhost',
-        'appseguimiento.test',
-        'amsolutions.lat',
-        'drroutex.pe',
-    ], array_filter(array_map('trim', explode(',', env('CENTRAL_DOMAINS', ''))))),
-
     'central_domain' => env('CENTRAL_DOMAIN'),
+
+    'central_domains' => array_values(array_unique(array_filter(array_merge(
+        array_filter([
+            env('CENTRAL_DOMAIN'),
+            parse_url((string) env('APP_URL', ''), PHP_URL_HOST),
+        ]),
+        array_filter(array_map('trim', explode(',', env('CENTRAL_DOMAINS', '')))),
+        [
+            '127.0.0.1',
+            'localhost',
+        ],
+    )))),
 
     /**
      * Tenancy bootstrappers are executed when tenancy is initialized.
@@ -203,4 +207,3 @@ return [
         // '--force' => true, // This needs to be true to seed tenant databases in production
     ],
 ];
-
