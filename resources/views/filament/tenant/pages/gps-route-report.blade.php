@@ -4,12 +4,31 @@
 
     <style>
         .gps-report-card {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 70dvh;
+            min-height: 22rem;
+            margin: 0;
+            padding: 0;
             overflow: hidden;
-            border-radius: 1rem;
-            border: 1px solid rgba(229, 231, 235, 0.8);
-            background: #ffffff;
-            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+            border-radius: 0;
+            border: 0;
+            background: transparent;
+            box-shadow: none;
             position: relative;
+        }
+
+        @media (min-width: 768px) {
+            .gps-report-card {
+                height: 78dvh;
+                min-height: 32rem;
+            }
+        }
+
+        .gps-report-map-wrap {
+            flex: 1 1 auto;
+            min-height: 0;
         }
 
         .gps-report-marker {
@@ -58,16 +77,15 @@
         }
 
         #gps-report-map {
-            height: 78dvh;
-            min-height: 32rem;
             width: 100%;
+            height: 100%;
             z-index: 0;
         }
 
         .dark .gps-report-card {
-            border-color: rgba(255, 255, 255, 0.1);
-            background: #111827;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+            border-color: transparent;
+            background: transparent;
+            box-shadow: none;
         }
 
         .dark .gps-report-player {
@@ -338,7 +356,7 @@
                     </div>
                 @endif
 
-                <div wire:ignore>
+                <div wire:ignore class="gps-report-map-wrap">
                     <div id="gps-report-map"></div>
                 </div>
 
@@ -374,25 +392,17 @@
                     @endif
                 </div>
 
-                @if(!$reportGenerated || empty($reportPoints))
+                @if($reportGenerated && empty($reportPoints))
                     <div class="gps-report-empty-overlay">
                         <div class="gps-report-empty-panel">
                             <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300">
                                 <x-filament::icon icon="heroicon-o-map-pin" class="h-8 w-8" />
                             </div>
                             <h3 class="text-lg font-semibold text-gray-950 dark:text-white">
-                                @if(!$reportGenerated)
-                                    Seleccioná un dispositivo y generá el reporte
-                                @else
-                                    Sin datos de recorrido
-                                @endif
+                                Sin datos de recorrido
                             </h3>
                             <p class="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">
-                                @if(!$reportGenerated)
-                                    Elegí un dispositivo y hacé clic en "Generar Reporte" para ver el recorrido en el mapa.
-                                @else
-                                    No se encontraron puntos GPS para el período seleccionado.
-                                @endif
+                                No se encontraron puntos GPS para el período seleccionado.
                             </p>
                         </div>
                     </div>
