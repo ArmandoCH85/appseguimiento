@@ -324,9 +324,11 @@
 
                 <div wire:ignore>
                     <div id="gps-report-map"></div>
+                </div>
 
+                <div id="gps-player-container">
                     @if(!empty($reportPoints))
-                        <div id="gps-player" class="gps-report-player">
+                        <div id="gps-player" class="gps-report-player" wire:key="gps-player-{{ count($reportPoints) }}">
                             <button id="gps-player-reset" title="Reiniciar" class="reset-btn">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
                                     <path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 0 1-9.201 2.466l-.312-.311.714-.7.312.31a4.5 4.5 0 0 0 7.484-3.44l-.312-.31.714-.7.312.31a5.5 5.5 0 0 1 .189 7.025ZM4.688 8.576a5.5 5.5 0 0 1 9.201-2.466l.312.311-.714.7-.312-.31a4.5 4.5 0 0 0-7.484 3.44l.312.31-.714.7-.312-.31a5.5 5.5 0 0 1-.189-7.025Z" clip-rule="evenodd"/>
@@ -337,10 +339,10 @@
                                     <path d="M6.3 2.841A1.5 1.5 0 0 0 4 4.11v11.78a1.5 1.5 0 0 0 2.3 1.269l9.344-5.89a1.5 1.5 0 0 0 0-2.538L6.3 2.84Z"/>
                                 </svg>
                             </button>
-                            <input id="gps-player-slider" type="range" min="0" max="0" value="0" />
-                            <span id="gps-player-counter" class="text-xs font-mono font-semibold text-gray-500 dark:text-gray-400 whitespace-nowrap">0/0</span>
+                            <input id="gps-player-slider" type="range" min="0" max="{{ max(count($reportPoints) - 1, 0) }}" value="0" />
+                            <span id="gps-player-counter" class="text-xs font-mono font-semibold text-gray-500 dark:text-gray-400 whitespace-nowrap">0/{{ count($reportPoints) }}</span>
                             <div class="flex items-center gap-0.5">
-                                <button class="speed-btn" data-speed="1">1x</button>
+                                <button class="speed-btn active" data-speed="1">1x</button>
                                 <button class="speed-btn" data-speed="2">2x</button>
                                 <button class="speed-btn" data-speed="4">4x</button>
                             </div>
