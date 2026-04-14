@@ -71,8 +71,8 @@
         }
 
         .dark .gps-report-legend {
-            border-color: rgba(255, 255, 255, 0.12);
-            background: rgba(3, 7, 18, 0.86);
+            border-color: rgba(255, 255, 255, 0.1);
+            background: #1f2937;
         }
 
         .dark .gps-report-empty-overlay {
@@ -121,12 +121,11 @@
         }
 
         .gps-report-legend {
-            padding: 0.75rem 1rem;
-            border-radius: 1rem;
-            border: 1px solid rgba(255, 255, 255, 0.7);
-            background: rgba(255, 255, 255, 0.92);
-            box-shadow: 0 16px 40px rgba(15, 23, 42, 0.18);
-            backdrop-filter: blur(10px);
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.5rem;
+            border: 1px solid rgba(229, 231, 235, 0.8);
+            background: #ffffff;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
         .gps-report-legend-dot {
@@ -166,38 +165,34 @@
                 </div>
             </x-slot>
 
-            <div class="gps-report-card relative">
+<div class="gps-report-card relative">
                 @if($reportGenerated && !empty($reportPoints))
-                    <div class="absolute left-3 top-3 z-[500] flex flex-wrap items-center gap-x-4 gap-y-1 rounded-xl border border-white/70 bg-white/90 px-3 py-2 text-xs shadow-lg backdrop-blur-md dark:border-white/10 dark:bg-gray-900/80 dark:text-gray-200">
-                        <span class="inline-flex items-center gap-1 font-semibold text-gray-950 dark:text-white">
-                            <x-filament::icon icon="heroicon-s-map-pin" class="h-3.5 w-3.5 text-emerald-500" />
+                    <div class="absolute left-3 top-3 z-[500] flex items-center gap-2 rounded-lg border border-gray-200/80 bg-white px-2.5 py-1.5 shadow dark:border-white/10 dark:bg-gray-900">
+                        <x-filament::badge color="success" size="sm">
+                            <x-filament::icon icon="heroicon-s-map-pin" class="h-3.5 w-3.5" />
                             {{ $pointsCount }}
-                        </span>
-                        <span class="h-3 w-px bg-gray-300 dark:bg-gray-600"></span>
-                        <span class="inline-flex items-center gap-1 font-semibold text-gray-950 dark:text-white">
-                            <x-filament::icon icon="heroicon-s-arrows-right-left" class="h-3.5 w-3.5 text-blue-500" />
+                        </x-filament::badge>
+                        <x-filament::badge color="info" size="sm">
+                            <x-filament::icon icon="heroicon-s-arrows-right-left" class="h-3.5 w-3.5" />
                             {{ $distanceFormatted }}
-                        </span>
-                        <span class="h-3 w-px bg-gray-300 dark:bg-gray-600"></span>
-                        <span class="inline-flex items-center gap-1 font-semibold text-gray-950 dark:text-white">
-                            <x-filament::icon icon="heroicon-s-clock" class="h-3.5 w-3.5 text-amber-500" />
+                        </x-filament::badge>
+                        <x-filament::badge color="warning" size="sm">
+                            <x-filament::icon icon="heroicon-s-clock" class="h-3.5 w-3.5" />
                             {{ $durationFormatted }}
-                        </span>
+                        </x-filament::badge>
                         @php
                             $formData = $this->form->getState();
                             $dateFilter = $formData['dateFilter'] ?? 'today';
                             $startDate = $formData['startDate'] ?? '';
                             $endDate = $formData['endDate'] ?? '';
                         @endphp
-                        <span class="h-3 w-px bg-gray-300 dark:bg-gray-600"></span>
-                        <span class="inline-flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                        <x-filament::badge color="gray" size="sm">
                             <x-filament::icon icon="heroicon-s-calendar-days" class="h-3.5 w-3.5" />
                             @if($dateFilter === 'today') Hoy
                             @elseif($dateFilter === 'yesterday') Ayer
                             @else {{ $startDate }} → {{ $endDate }}
                             @endif
-</span>
-                        </div>
+                        </x-filament::badge>
                     </div>
                 @endif
 
@@ -243,7 +238,7 @@
                             <span class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-gray-700 dark:text-gray-200">
                                 <span class="gps-report-legend-dot bg-emerald-500 ring-4 ring-emerald-500/20"></span>
                                 Fin
-                            </div>
+                            </span>
                         </div>
                     </div>
                 @endif
