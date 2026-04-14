@@ -225,6 +225,22 @@
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
         }
 
+        .gps-player-timestamp {
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.25rem 0.625rem;
+            border-radius: 0.5rem;
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            flex-shrink: 0;
+        }
+
+        .dark .gps-player-timestamp {
+            background: rgba(16, 185, 129, 0.08);
+            border-color: rgba(16, 185, 129, 0.2);
+        }
+
         .gps-report-player .speed-btn {
             font-size: 0.7rem;
             font-weight: 600;
@@ -340,7 +356,15 @@
                                 </svg>
                             </button>
                             <input id="gps-player-slider" type="range" min="0" max="{{ max(count($reportPoints) - 1, 0) }}" value="0" />
-                            <span id="gps-player-counter" class="text-xs font-mono font-semibold text-gray-500 dark:text-gray-400 whitespace-nowrap">0/{{ count($reportPoints) }}</span>
+                            <div id="gps-player-timestamp" class="gps-player-timestamp">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3.5 h-3.5 shrink-0 text-emerald-500">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-13a.75.75 0 0 0-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 0 0 0-1.5h-3.25V5Z" clip-rule="evenodd"/>
+                                </svg>
+                                <span id="gps-player-time-text" class="font-mono text-[11px] font-semibold text-gray-700 dark:text-gray-200 whitespace-nowrap tabular-nums">
+                                    {{ $reportPoints[0]['time_human'] ?? '—' }}
+                                </span>
+                            </div>
+                            <span id="gps-player-counter" class="text-xs font-mono font-semibold text-gray-400 dark:text-gray-500 whitespace-nowrap tabular-nums">0/{{ count($reportPoints) }}</span>
                             <div class="flex items-center gap-0.5">
                                 <button class="speed-btn active" data-speed="1">1x</button>
                                 <button class="speed-btn" data-speed="2">2x</button>
@@ -374,24 +398,6 @@
                     </div>
                 @endif
 
-                @if(!empty($reportPoints))
-                    <div class="gps-report-legend absolute right-3 top-3 z-[500]">
-                        <div class="flex items-center gap-3">
-                            <span class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-gray-700 dark:text-gray-200">
-                                <span class="gps-report-legend-dot bg-slate-900 dark:bg-slate-100"></span>
-                                Inicio
-                            </span>
-                            <span class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-gray-700 dark:text-gray-200">
-                                <span class="gps-report-legend-dot bg-emerald-500"></span>
-                                Recorrido
-                            </span>
-                            <span class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-gray-700 dark:text-gray-200">
-                                <span class="gps-report-legend-dot bg-emerald-500 ring-4 ring-emerald-500/20"></span>
-                                Fin
-                            </span>
-                        </div>
-                    </div>
-                @endif
             </div>
         </x-filament::section>
     </div>
@@ -607,7 +613,16 @@
             if (slider) slider.value = '0';
             var counter = document.getElementById('gps-player-counter');
             if (counter) counter.textContent = '0/' + p.allCoords.length;
+            updateTimestamp(0);
             updatePlayButton();
+        }
+
+        function updateTimestamp(index) {
+            var p = window.__gpsPlayer;
+            var el = document.getElementById('gps-player-time-text');
+            if (!el) return;
+            var point = p.points[index];
+            el.textContent = (point && point.time_human) ? point.time_human : '—';
         }
 
         function advancePlayer() {
@@ -635,6 +650,8 @@
             var counter = document.getElementById('gps-player-counter');
             if (counter) counter.textContent = (p.currentIndex + 1) + '/' + p.allCoords.length;
 
+            updateTimestamp(p.currentIndex);
+
             p.currentIndex++;
 
             var delay = p.baseDelayMs / p.speed;
@@ -654,6 +671,8 @@
             if (slider) slider.value = String(index);
             var counter = document.getElementById('gps-player-counter');
             if (counter) counter.textContent = (index + 1) + '/' + p.allCoords.length;
+
+            updateTimestamp(index);
 
             if (p.playing) {
                 if (p.intervalId) clearTimeout(p.intervalId);
