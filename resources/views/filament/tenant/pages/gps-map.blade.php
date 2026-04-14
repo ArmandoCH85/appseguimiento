@@ -310,28 +310,30 @@
                                 Último punto
                             </x-slot>
 
-                            <dl class="space-y-3">
-                                <div>
-                                    <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Coordenadas</dt>
-                                    <dd class="mt-1 font-mono text-sm font-semibold text-gray-950 dark:text-white">
+                            <div class="flex items-center gap-2 overflow-x-auto whitespace-nowrap text-[10px] sm:text-xs">
+                                <x-filament::badge color="gray" icon="heroicon-m-map-pin" size="sm" class="min-w-0">
+                                    Coord:
+                                    <span class="inline-block max-w-[14rem] overflow-hidden text-ellipsis align-bottom font-mono font-semibold tabular-nums text-gray-950 dark:text-white">
                                         {{ number_format($latestPoint['latitude'], 6) }}, {{ number_format($latestPoint['longitude'], 6) }}
-                                    </dd>
-                                </div>
+                                    </span>
+                                </x-filament::badge>
 
-                                <div>
-                                    <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Hora GPS</dt>
-                                    <dd class="mt-1 text-sm font-semibold text-gray-950 dark:text-white">{{ $latestPoint['time_human'] }}</dd>
-                                </div>
+                                <x-filament::badge color="gray" icon="heroicon-m-clock" size="sm" class="shrink-0">
+                                    GPS:
+                                    <span class="font-mono font-semibold tabular-nums text-gray-950 dark:text-white">
+                                        {{ $latestPoint['time_human'] }}
+                                    </span>
+                                </x-filament::badge>
 
-                                <div>
-                                    <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Precisión</dt>
-                                    <dd class="mt-1 text-sm font-semibold text-emerald-600 dark:text-emerald-400">{{ $latestPoint['accuracy_human'] }}</dd>
-                                </div>
-                            </dl>
+                                <x-filament::badge color="success" icon="heroicon-m-sparkles" size="sm" class="shrink-0">
+                                    Precisión:
+                                    <span class="font-mono font-semibold tabular-nums">
+                                        {{ $latestPoint['accuracy_human'] }}
+                                    </span>
+                                </x-filament::badge>
+                            </div>
                         </x-filament::section>
                     @endif
-
-            
                 </div>
             </div>
         </div>
