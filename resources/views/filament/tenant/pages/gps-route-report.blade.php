@@ -623,6 +623,13 @@
             var coord = p.allCoords[p.currentIndex];
             p.trackerMarker.setLatLng(coord);
 
+            // Pan map to follow the tracker when it leaves the visible area
+            if (window.__gpsReportMap) {
+                if (!window.__gpsReportMap.getBounds().contains(coord)) {
+                    window.__gpsReportMap.panTo(coord, { animate: true, duration: 0.4 });
+                }
+            }
+
             var slider = document.getElementById('gps-player-slider');
             if (slider) slider.value = String(p.currentIndex);
             var counter = document.getElementById('gps-player-counter');
@@ -719,7 +726,13 @@
 
         window.initOrUpdateMap = initOrUpdateMap;
 
-        document.addEventListener('gps-report-generated', function (event) {
+        // Deduplicate the listener — Livewire re-executes this script on every render
+        // (fields use ->live()), causing listeners to accumulate and initOrUpdateMap
+        // to fire multiple times, which stops the player and destroys the map.
+        if (window.__gpsReportListener) {
+            document.removeEventListener('gps-report-generated', window.__gpsReportListener);
+        }
+        window.__gpsReportListener = function (event) {
             var points = (event.detail && event.detail.points) || window.__gpsReportPoints;
             var segments = (event.detail && event.detail.segments) || window.__gpsReportSegments;
             window.__gpsReportPoints = points;
@@ -727,12 +740,16 @@
             setTimeout(function () {
                 initOrUpdateMap(points, segments);
             }, 150);
-        });
+        };
+        document.addEventListener('gps-report-generated', window.__gpsReportListener);
 
-        document.addEventListener('DOMContentLoaded', function () {
-            if (window.__gpsReportPoints && window.__gpsReportPoints.length > 0) {
-                initOrUpdateMap(window.__gpsReportPoints, window.__gpsReportSegments);
-            }
-        });
+        if (!window.__gpsReportDomReadyBound) {
+            window.__gpsReportDomReadyBound = true;
+            document.addEventListener('DOMContentLoaded', function () {
+                if (window.__gpsReportPoints && window.__gpsReportPoints.length > 0) {
+                    initOrUpdateMap(window.__gpsReportPoints, window.__gpsReportSegments);
+                }
+            });
+        }
     </script>
 </x-filament-panels::page>
