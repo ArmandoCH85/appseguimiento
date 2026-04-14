@@ -93,8 +93,23 @@
             background: #1f2937;
         }
 
+        .dark .gps-report-player button {
+            background: #111827;
+            color: #e5e7eb;
+            border-color: rgba(55, 65, 81, 0.9);
+            box-shadow: none;
+        }
+
+        .dark .gps-report-player button:hover {
+            background-color: #0b1220;
+        }
+
+        .dark .gps-report-player button:active {
+            background-color: #0b1220;
+        }
+
         .dark .gps-report-player input[type="range"] {
-            background: #374151;
+            background: linear-gradient(to right, #10b981 0%, #10b981 var(--gps-slider-pct), #374151 var(--gps-slider-pct), #374151 100%);
         }
 
         .dark .gps-report-player input[type="range"]::-webkit-slider-thumb {
@@ -182,19 +197,42 @@
             width: 2rem;
             height: 2rem;
             border-radius: 9999px;
-            border: none;
+            border: 1px solid rgba(229, 231, 235, 0.9);
             cursor: pointer;
-            transition: background-color 0.15s;
+            transition: transform 0.15s ease, background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
             flex-shrink: 0;
+            background: #f9fafb;
+            color: #0f172a;
+            box-shadow: 0 1px 0 rgba(15, 23, 42, 0.04);
         }
 
         .gps-report-player button:hover {
-            background-color: rgba(16, 185, 129, 0.15);
+            background-color: #f3f4f6;
+            transform: translateY(-1px);
+        }
+
+        .gps-report-player button:active {
+            transform: translateY(0) scale(0.97);
+            background-color: #e5e7eb;
+        }
+
+        .gps-report-player button:focus-visible {
+            outline: 2px solid #10b981;
+            outline-offset: 2px;
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.18);
+        }
+
+        .gps-report-player button:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            transform: none;
         }
 
         .gps-report-player button.play-btn {
             background-color: #10b981;
             color: #ffffff;
+            border-color: rgba(16, 185, 129, 0.35);
+            box-shadow: 0 10px 18px rgba(16, 185, 129, 0.18);
         }
 
         .gps-report-player button.play-btn:hover {
@@ -202,12 +240,12 @@
         }
 
         .gps-report-player button.reset-btn {
-            background-color: #f3f4f6;
-            color: #374151;
+            background-color: #ffffff;
+            color: #0f172a;
         }
 
         .gps-report-player button.reset-btn:hover {
-            background-color: #e5e7eb;
+            background-color: #f3f4f6;
         }
 
         .gps-report-player input[type="range"] {
@@ -216,9 +254,11 @@
             appearance: none;
             height: 0.375rem;
             border-radius: 9999px;
-            background: #e5e7eb;
+            --gps-slider-pct: 0%;
+            background: linear-gradient(to right, #10b981 0%, #10b981 var(--gps-slider-pct), #e5e7eb var(--gps-slider-pct), #e5e7eb 100%);
             outline: none;
             cursor: pointer;
+            transition: background 0.15s ease;
         }
 
         .gps-report-player input[type="range"]::-webkit-slider-thumb {
@@ -227,20 +267,28 @@
             width: 0.875rem;
             height: 0.875rem;
             border-radius: 9999px;
-            background: #10b981;
+            background: #ffffff;
             cursor: pointer;
-            border: 2px solid #ffffff;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+            border: 2px solid #10b981;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.16);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
         }
 
         .gps-report-player input[type="range"]::-moz-range-thumb {
             width: 0.875rem;
             height: 0.875rem;
             border-radius: 9999px;
-            background: #10b981;
+            background: #ffffff;
             cursor: pointer;
-            border: 2px solid #ffffff;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+            border: 2px solid #10b981;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.16);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .gps-report-player input[type="range"]:focus-visible::-webkit-slider-thumb,
+        .gps-report-player input[type="range"]:focus-visible::-moz-range-thumb {
+            transform: scale(1.08);
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.18), 0 8px 18px rgba(15, 23, 42, 0.16);
         }
 
         .gps-player-timestamp {
@@ -264,35 +312,38 @@
             font-weight: 600;
             padding: 0.125rem 0.5rem;
             border-radius: 9999px;
-            background: #f3f4f6;
-            color: #374151;
-            border: 1px solid transparent;
+            background: #ffffff;
+            color: #0f172a;
+            border: 1px solid rgba(229, 231, 235, 0.9);
             cursor: pointer;
             transition: all 0.15s;
             white-space: nowrap;
         }
 
         .gps-report-player .speed-btn:hover {
-            background: #e5e7eb;
+            background: #f3f4f6;
         }
 
         .gps-report-player .speed-btn.active {
             background: #10b981;
             color: #ffffff;
+            border-color: rgba(16, 185, 129, 0.35);
         }
 
         .dark .gps-report-player button.reset-btn {
-            background-color: #374151;
-            color: #d1d5db;
+            background-color: #111827;
+            color: #e5e7eb;
+            border-color: rgba(55, 65, 81, 0.9);
         }
 
         .dark .gps-report-player button.reset-btn:hover {
-            background-color: #4b5563;
+            background-color: #0b1220;
         }
 
         .dark .gps-report-player .speed-btn {
-            background: #374151;
-            color: #d1d5db;
+            background: #111827;
+            color: #e5e7eb;
+            border-color: rgba(55, 65, 81, 0.9);
         }
 
         .dark .gps-report-player .speed-btn:hover {
@@ -311,6 +362,20 @@
 
         .gps-tracker-icon {
             animation: gps-tracker-bounce 1.5s ease-in-out infinite;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .gps-tracker-icon {
+                animation: none;
+            }
+
+            .gps-report-player button,
+            .gps-report-player input[type="range"],
+            .gps-report-player input[type="range"]::-webkit-slider-thumb,
+            .gps-report-player input[type="range"]::-moz-range-thumb,
+            .gps-report-player .speed-btn {
+                transition: none;
+            }
         }
     </style>
 
@@ -363,20 +428,22 @@
                 <div id="gps-player-container">
                     @if(!empty($reportPoints))
                         <div id="gps-player" class="gps-report-player" wire:key="gps-player-{{ count($reportPoints) }}">
-                            <button id="gps-player-reset" title="Reiniciar" class="reset-btn">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
-                                    <path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 0 1-9.201 2.466l-.312-.311.714-.7.312.31a4.5 4.5 0 0 0 7.484-3.44l-.312-.31.714-.7.312.31a5.5 5.5 0 0 1 .189 7.025ZM4.688 8.576a5.5 5.5 0 0 1 9.201-2.466l.312.311-.714.7-.312-.31a4.5 4.5 0 0 0-7.484 3.44l.312.31-.714.7-.312-.31a5.5 5.5 0 0 1-.189-7.025Z" clip-rule="evenodd"/>
+                            <button id="gps-player-reset" type="button" title="Reiniciar" aria-label="Reiniciar" class="reset-btn">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+                                    <path d="M16 10a6 6 0 1 1-2.2-4.6"/>
+                                    <path d="M16 4v4h-4"/>
                                 </svg>
                             </button>
-                            <button id="gps-player-play" title="Reproducir" class="play-btn">
-                                <svg id="gps-player-play-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
-                                    <path d="M6.3 2.841A1.5 1.5 0 0 0 4 4.11v11.78a1.5 1.5 0 0 0 2.3 1.269l9.344-5.89a1.5 1.5 0 0 0 0-2.538L6.3 2.84Z"/>
+                            <button id="gps-player-play" type="button" title="Reproducir" aria-label="Reproducir" aria-pressed="false" class="play-btn">
+                                <svg id="gps-player-play-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+                                    <path d="M8 6.5 14 10l-6 3.5z"/>
                                 </svg>
                             </button>
-                            <input id="gps-player-slider" type="range" min="0" max="{{ max(count($reportPoints) - 1, 0) }}" value="0" />
+                            <input id="gps-player-slider" type="range" min="0" max="{{ max(count($reportPoints) - 1, 0) }}" value="0" aria-label="Progreso" />
                             <div id="gps-player-timestamp" class="gps-player-timestamp">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3.5 h-3.5 shrink-0 text-emerald-500">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-13a.75.75 0 0 0-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 0 0 0-1.5h-3.25V5Z" clip-rule="evenodd"/>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 shrink-0 text-emerald-600 dark:text-emerald-400">
+                                    <path d="M10 16a6 6 0 1 0 0-12 6 6 0 0 0 0 12Z"/>
+                                    <path d="M10 7v3l2 1"/>
                                 </svg>
                                 <span id="gps-player-time-text" class="font-mono text-[11px] font-semibold text-gray-700 dark:text-gray-200 whitespace-nowrap tabular-nums">
                                     {{ $reportPoints[0]['time_human'] ?? '—' }}
@@ -384,9 +451,9 @@
                             </div>
                             <span id="gps-player-counter" class="text-xs font-mono font-semibold text-gray-400 dark:text-gray-500 whitespace-nowrap tabular-nums">0/{{ count($reportPoints) }}</span>
                             <div class="flex items-center gap-0.5">
-                                <button class="speed-btn active" data-speed="1">1x</button>
-                                <button class="speed-btn" data-speed="2">2x</button>
-                                <button class="speed-btn" data-speed="4">4x</button>
+                                <button type="button" class="speed-btn active" data-speed="1" aria-label="Velocidad 1x" aria-pressed="true">1x</button>
+                                <button type="button" class="speed-btn" data-speed="2" aria-label="Velocidad 2x" aria-pressed="false">2x</button>
+                                <button type="button" class="speed-btn" data-speed="4" aria-label="Velocidad 4x" aria-pressed="false">4x</button>
                             </div>
                         </div>
                     @endif
@@ -568,6 +635,7 @@
             if (slider) {
                 slider.max = String(Math.max(allCoords.length - 1, 0));
                 slider.value = '0';
+                updateSliderVisual(slider);
             }
             if (counter) {
                 counter.textContent = '0/' + allCoords.length;
@@ -620,7 +688,10 @@
                 p.trackerMarker.setOpacity(0);
             }
             var slider = document.getElementById('gps-player-slider');
-            if (slider) slider.value = '0';
+            if (slider) {
+                slider.value = '0';
+                updateSliderVisual(slider);
+            }
             var counter = document.getElementById('gps-player-counter');
             if (counter) counter.textContent = '0/' + p.allCoords.length;
             updateTimestamp(0);
@@ -656,7 +727,10 @@
             }
 
             var slider = document.getElementById('gps-player-slider');
-            if (slider) slider.value = String(p.currentIndex);
+            if (slider) {
+                slider.value = String(p.currentIndex);
+                updateSliderVisual(slider);
+            }
             var counter = document.getElementById('gps-player-counter');
             if (counter) counter.textContent = (p.currentIndex + 1) + '/' + p.allCoords.length;
 
@@ -678,7 +752,10 @@
             p.trackerMarker.setOpacity(1);
 
             var slider = document.getElementById('gps-player-slider');
-            if (slider) slider.value = String(index);
+            if (slider) {
+                slider.value = String(index);
+                updateSliderVisual(slider);
+            }
             var counter = document.getElementById('gps-player-counter');
             if (counter) counter.textContent = (index + 1) + '/' + p.allCoords.length;
 
@@ -694,19 +771,40 @@
             var p = window.__gpsPlayer;
             var btn = document.getElementById('gps-player-play-icon');
             if (!btn) return;
+            var playBtn = document.getElementById('gps-player-play');
 
             if (p.playing) {
-                btn.innerHTML = '<path fill-rule="evenodd" d="M6.75 5.25a.75.75 0 0 1 .75-.75H9a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H7.5a.75.75 0 0 1-.75-.75V5.25Zm5.25 0a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H12a.75.75 0 0 1-.75-.75V5.25Z" clip-rule="evenodd"/>';
+                btn.innerHTML = '<path d="M8 7v6"/><path d="M12 7v6"/>';
+                if (playBtn) {
+                    playBtn.setAttribute('aria-pressed', 'true');
+                    playBtn.setAttribute('aria-label', 'Pausar');
+                    playBtn.setAttribute('title', 'Pausar');
+                }
             } else {
-                btn.innerHTML = '<path d="M6.3 2.841A1.5 1.5 0 0 0 4 4.11v11.78a1.5 1.5 0 0 0 2.3 1.269l9.344-5.89a1.5 1.5 0 0 0 0-2.538L6.3 2.84Z"/>';
+                btn.innerHTML = '<path d="M8 6.5 14 10l-6 3.5z"/>';
+                if (playBtn) {
+                    playBtn.setAttribute('aria-pressed', 'false');
+                    playBtn.setAttribute('aria-label', 'Reproducir');
+                    playBtn.setAttribute('title', 'Reproducir');
+                }
             }
+        }
+
+        function updateSliderVisual(slider) {
+            if (!slider) return;
+            var max = parseInt(slider.max || '0', 10);
+            var val = parseInt(slider.value || '0', 10);
+            var pct = (max > 0) ? (val / max) * 100 : 0;
+            slider.style.setProperty('--gps-slider-pct', pct + '%');
         }
 
         function setSpeed(speed) {
             var p = window.__gpsPlayer;
             p.speed = speed;
             document.querySelectorAll('.speed-btn').forEach(function(btn) {
-                btn.classList.toggle('active', parseInt(btn.dataset.speed) === speed);
+                var active = parseInt(btn.dataset.speed) === speed;
+                btn.classList.toggle('active', active);
+                btn.setAttribute('aria-pressed', active ? 'true' : 'false');
             });
 
             if (p.playing) {
@@ -740,7 +838,9 @@
             if (slider) {
                 slider.oninput = function(e) {
                     seekPlayer(parseInt(e.target.value, 10));
+                    updateSliderVisual(slider);
                 };
+                updateSliderVisual(slider);
             }
 
             if (speedBtns.length > 0) {
@@ -749,7 +849,7 @@
                         setSpeed(parseInt(btn.dataset.speed, 10));
                     };
                 });
-                speedBtns[0].classList.add('active');
+                setSpeed((window.__gpsPlayer && window.__gpsPlayer.speed) ? window.__gpsPlayer.speed : 1);
             }
         }
 
