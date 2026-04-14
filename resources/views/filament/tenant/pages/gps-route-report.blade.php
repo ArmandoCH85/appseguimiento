@@ -324,6 +324,28 @@
 
                 <div wire:ignore>
                     <div id="gps-report-map"></div>
+
+                    @if(!empty($reportPoints))
+                        <div id="gps-player" class="gps-report-player">
+                            <button id="gps-player-reset" title="Reiniciar" class="reset-btn">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
+                                    <path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 0 1-9.201 2.466l-.312-.311.714-.7.312.31a4.5 4.5 0 0 0 7.484-3.44l-.312-.31.714-.7.312.31a5.5 5.5 0 0 1 .189 7.025ZM4.688 8.576a5.5 5.5 0 0 1 9.201-2.466l.312.311-.714.7-.312-.31a4.5 4.5 0 0 0-7.484 3.44l.312.31-.714.7-.312-.31a5.5 5.5 0 0 1-.189-7.025Z" clip-rule="evenodd"/>
+                                </svg>
+                            </button>
+                            <button id="gps-player-play" title="Reproducir" class="play-btn">
+                                <svg id="gps-player-play-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
+                                    <path d="M6.3 2.841A1.5 1.5 0 0 0 4 4.11v11.78a1.5 1.5 0 0 0 2.3 1.269l9.344-5.89a1.5 1.5 0 0 0 0-2.538L6.3 2.84Z"/>
+                                </svg>
+                            </button>
+                            <input id="gps-player-slider" type="range" min="0" max="0" value="0" />
+                            <span id="gps-player-counter" class="text-xs font-mono font-semibold text-gray-500 dark:text-gray-400 whitespace-nowrap">0/0</span>
+                            <div class="flex items-center gap-0.5">
+                                <button class="speed-btn" data-speed="1">1x</button>
+                                <button class="speed-btn" data-speed="2">2x</button>
+                                <button class="speed-btn" data-speed="4">4x</button>
+                            </div>
+                        </div>
+                    @endif
                 </div>
 
                 @if(!$reportGenerated || empty($reportPoints))
@@ -365,28 +387,6 @@
                                 <span class="gps-report-legend-dot bg-emerald-500 ring-4 ring-emerald-500/20"></span>
                                 Fin
                             </span>
-                        </div>
-                    </div>
-                @endif
-
-                @if(!empty($reportPoints))
-                    <div id="gps-player" class="gps-report-player">
-                        <button id="gps-player-reset" title="Reiniciar" class="reset-btn">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
-                                <path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 0 1-9.201 2.466l-.312-.311.714-.7.312.31a4.5 4.5 0 0 0 7.484-3.44l-.312-.31.714-.7.312.31a5.5 5.5 0 0 1 .189 7.025ZM4.688 8.576a5.5 5.5 0 0 1 9.201-2.466l.312.311-.714.7-.312-.31a4.5 4.5 0 0 0-7.484 3.44l.312.31-.714.7-.312-.31a5.5 5.5 0 0 1-.189-7.025Z" clip-rule="evenodd"/>
-                            </svg>
-                        </button>
-                        <button id="gps-player-play" title="Reproducir" class="play-btn">
-                            <svg id="gps-player-play-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
-                                <path d="M6.3 2.841A1.5 1.5 0 0 0 4 4.11v11.78a1.5 1.5 0 0 0 2.3 1.269l9.344-5.89a1.5 1.5 0 0 0 0-2.538L6.3 2.84Z"/>
-                            </svg>
-                        </button>
-                        <input id="gps-player-slider" type="range" min="0" max="0" value="0" />
-                        <span id="gps-player-counter" class="text-xs font-mono font-semibold text-gray-500 dark:text-gray-400 whitespace-nowrap">0/0</span>
-                        <div class="flex items-center gap-0.5">
-                            <button class="speed-btn" data-speed="1">1x</button>
-                            <button class="speed-btn" data-speed="2">2x</button>
-                            <button class="speed-btn" data-speed="4">4x</button>
                         </div>
                     </div>
                 @endif
@@ -559,6 +559,8 @@
             setTimeout(function () {
                 map.invalidateSize();
             }, 200);
+
+            bindPlayerEvents();
         }
 
         // Player controls
@@ -668,14 +670,15 @@
             }
         }
 
-        // Bind player events after DOM ready
-        document.addEventListener('DOMContentLoaded', function() {
+        // Bind player events — called after map init to ensure DOM exists
+        function bindPlayerEvents() {
             var playBtn = document.getElementById('gps-player-play');
             var resetBtn = document.getElementById('gps-player-reset');
             var slider = document.getElementById('gps-player-slider');
             var speedBtns = document.querySelectorAll('.speed-btn');
 
-            if (playBtn) {
+            if (playBtn && !playBtn.__gpsBound) {
+                playBtn.__gpsBound = true;
                 playBtn.addEventListener('click', function() {
                     if (window.__gpsPlayer.playing) {
                         pausePlayer();
@@ -685,13 +688,15 @@
                 });
             }
 
-            if (resetBtn) {
+            if (resetBtn && !resetBtn.__gpsBound) {
+                resetBtn.__gpsBound = true;
                 resetBtn.addEventListener('click', function() {
                     stopPlayer();
                 });
             }
 
-            if (slider) {
+            if (slider && !slider.__gpsBound) {
+                slider.__gpsBound = true;
                 slider.addEventListener('input', function(e) {
                     seekPlayer(parseInt(e.target.value, 10));
                 });
@@ -699,6 +704,8 @@
 
             if (speedBtns.length > 0) {
                 speedBtns.forEach(function(btn) {
+                    if (btn.__gpsBound) return;
+                    btn.__gpsBound = true;
                     btn.addEventListener('click', function() {
                         setSpeed(parseInt(btn.dataset.speed, 10));
                     });
@@ -706,7 +713,7 @@
                 // Default 1x active
                 speedBtns[0].classList.add('active');
             }
-        });
+        }
 
         window.initOrUpdateMap = initOrUpdateMap;
 
