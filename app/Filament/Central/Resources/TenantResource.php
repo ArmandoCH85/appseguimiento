@@ -35,15 +35,19 @@ class TenantResource extends Resource
      */
     public static function getBaseDomain(): string
     {
-        $central = config('tenancy.central_domains', []);
+        // Prioridad 1: Clave específica en el config (central_domain leerá de .env)
+        if ($domain = config('tenancy.central_domain')) {
+            return $domain;
+        }
 
-        foreach ($central as $domain) {
+        // Prioridad 2: Buscar en la lista de central_domains (excluyendo IPs y localhost)
+        foreach (config('tenancy.central_domains', []) as $domain) {
             if (! filter_var($domain, FILTER_VALIDATE_IP) && $domain !== 'localhost') {
                 return $domain;
             }
         }
 
-        // Fallback: derivar del APP_URL
+        // Fallback: APP_URL
         return parse_url(config('app.url', 'http://localhost'), PHP_URL_HOST) ?? 'localhost';
     }
 

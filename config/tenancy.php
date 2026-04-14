@@ -24,6 +24,8 @@ return [
         'drroutex.pe',
     ], array_filter(array_map('trim', explode(',', env('CENTRAL_DOMAINS', ''))))),
 
+    'central_domain' => env('CENTRAL_DOMAIN'),
+
     /**
      * Tenancy bootstrappers are executed when tenancy is initialized.
      * Their responsibility is making Laravel features tenant-aware.
