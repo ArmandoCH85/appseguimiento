@@ -294,17 +294,16 @@
         .gps-player-timestamp {
             display: flex;
             align-items: center;
-            gap: 0.375rem;
-            padding: 0.25rem 0.625rem;
+            padding: 0.1875rem 0.5rem;
             border-radius: 0.5rem;
-            background: #f0fdf4;
-            border: 1px solid #bbf7d0;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
             flex-shrink: 0;
         }
 
         .dark .gps-player-timestamp {
-            background: rgba(16, 185, 129, 0.08);
-            border-color: rgba(16, 185, 129, 0.2);
+            background: rgba(15, 23, 42, 0.55);
+            border-color: rgba(148, 163, 184, 0.22);
         }
 
         .gps-report-player .speed-btn {
@@ -440,12 +439,8 @@
                                 </svg>
                             </button>
                             <input id="gps-player-slider" type="range" min="0" max="{{ max(count($reportPoints) - 1, 0) }}" value="0" aria-label="Progreso" />
-                            <div id="gps-player-timestamp" class="gps-player-timestamp">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 shrink-0 text-emerald-600 dark:text-emerald-400">
-                                    <path d="M10 16a6 6 0 1 0 0-12 6 6 0 0 0 0 12Z"/>
-                                    <path d="M10 7v3l2 1"/>
-                                </svg>
-                                <span id="gps-player-time-text" class="font-mono text-[11px] font-semibold text-gray-700 dark:text-gray-200 whitespace-nowrap tabular-nums">
+                            <div id="gps-player-timestamp" class="gps-player-timestamp" aria-live="polite" aria-atomic="true">
+                                <span id="gps-player-time-text" class="font-mono text-[10px] md:text-[11px] font-medium text-slate-700 dark:text-slate-200 whitespace-nowrap tabular-nums">
                                     {{ $reportPoints[0]['time_human'] ?? '—' }}
                                 </span>
                             </div>
