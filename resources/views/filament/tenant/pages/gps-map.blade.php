@@ -248,12 +248,6 @@
             {{-- Columna principal: Mapa (9 columnas) --}}
             <div class="xl:col-span-9">
                 <x-filament::section class="relative">
-                    <x-slot name="heading">
-                        <div class="flex items-center gap-2">
-                            <x-filament::icon icon="heroicon-o-map" class="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                            <span>Seguimiento en vivo</span>
-                        </div>
-                    </x-slot>
                     <x-slot name="description">
                         @if($selectedDevice)
                             <span class="text-gray-600 dark:text-gray-300">
