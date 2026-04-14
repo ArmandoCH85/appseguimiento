@@ -6,12 +6,12 @@ namespace App\Filament\Central\Resources;
 
 use App\Filament\Central\Resources\TenantResource\Pages;
 use App\Models\Central\Tenant;
-use Filament\Forms\Get;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
