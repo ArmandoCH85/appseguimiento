@@ -306,7 +306,6 @@
                     @if($latestPoint)
                         <x-filament::section>
                             <x-slot name="heading" class="flex items-center gap-2">
-                                <x-filament::icon icon="heroicon-o-map-pin" class="h-4 w-4" />
                                 Último punto
                             </x-slot>
 
