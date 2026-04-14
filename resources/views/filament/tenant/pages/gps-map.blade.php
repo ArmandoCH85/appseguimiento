@@ -203,7 +203,7 @@
                     <div class="mt-2 max-w-xl">
                         <x-filament::input.wrapper>
                             <x-filament::input.select id="gps-device-select" wire:model.live="selectedDeviceId">
-                                <option value="">— Seleccioná un dispositivo —</option>
+                                <option value="">— Selecciona un dispositivo —</option>
                                 @foreach($devices as $device)
                                     <option value="{{ $device->id }}">
                                         {{ $device->imei }}{{ $device->user ? ' · ' . $device->user->name : '' }}
@@ -214,30 +214,28 @@
                     </div>
                 </div>
 
-                <div class="flex min-w-0 items-center gap-3 overflow-x-auto whitespace-nowrap">
+                <div class="flex items-center gap-2 overflow-x-auto whitespace-nowrap text-[10px] sm:text-xs">
                     @if($selectedDeviceId)
-                        <x-filament::badge color="success" icon="heroicon-m-signal" class="shrink-0">
+                        <x-filament::badge color="success" icon="heroicon-m-signal" size="sm" class="shrink-0">
                             En vivo
                         </x-filament::badge>
-                        <div class="inline-flex min-w-0 flex-1 items-center gap-2 overflow-x-auto text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
-                            <x-filament::icon icon="heroicon-m-clock" class="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                        <div class="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
                             <span class="font-medium">Panel</span>
                             <span class="font-mono font-semibold tabular-nums text-gray-950 dark:text-white">{{ $lastUpdatedAt }}</span>
                             @if($deviceGpsTime)
                                 <span class="mx-1 h-3 w-px bg-gray-200 dark:bg-white/10"></span>
-                                <x-filament::icon icon="heroicon-m-device-phone-mobile" class="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                                 <span class="font-medium">GPS</span>
                                 <span class="font-mono font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">{{ $deviceGpsTime }}</span>
                             @endif
                         </div>
                     @else
-                        <x-filament::badge color="gray" icon="heroicon-m-signal-slash">
+                        <x-filament::badge color="gray" icon="heroicon-m-signal-slash" size="sm" class="shrink-0">
                             Sin dispositivo
                         </x-filament::badge>
                     @endif
 
-                    <div wire:loading wire:target="refreshPoints,updatedSelectedDeviceId" class="shrink-0">
-                        <x-filament::loading-indicator class="h-5 w-5 text-primary-500" />
+                    <div wire:loading wire:target="refreshPoints,updatedSelectedDeviceId" class="shrink-0 ml-1">
+                        <x-filament::loading-indicator class="h-4 w-4 text-primary-500" />
                     </div>
                 </div>
             </div>
