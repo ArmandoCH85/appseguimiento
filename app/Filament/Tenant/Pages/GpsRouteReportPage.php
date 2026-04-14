@@ -149,7 +149,7 @@ class GpsRouteReportPage extends Page
 
         $reportService = $this->getReportService();
         [$startTimeMs, $endTimeMs] = $this->getTimeRange($data);
-        $points = $reportService->getTracksForReport((int) $data['selectedDeviceId'], $startTimeMs, $endTimeMs);
+        $points = $reportService->getTracksForReport($data['selectedDeviceId'], $startTimeMs, $endTimeMs);
 
         logger()->info('GPS Report Result', ['count' => $points->count(), 'range' => [$startTimeMs, $endTimeMs]]);
 

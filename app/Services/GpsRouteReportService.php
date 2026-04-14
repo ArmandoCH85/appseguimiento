@@ -92,7 +92,7 @@ class GpsRouteReportService
         return round($distanceKm / $timeHours, 1);
     }
 
-    public function getTracksForReport(int $deviceId, ?int $startTimeMs = null, ?int $endTimeMs = null): Collection
+    public function getTracksForReport(string $deviceId, ?int $startTimeMs = null, ?int $endTimeMs = null): Collection
     {
         $query = GpsTrack::query()
             ->where('device_id', $deviceId)
