@@ -166,40 +166,41 @@
                 </div>
             </x-slot>
 
-            @if($reportGenerated)
-                {{-- Resumen rápido --}}
-                <div class="mb-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                    <div class="rounded-lg border border-gray-200/80 bg-gray-50 px-4 py-3 dark:border-white/10 dark:bg-white/[0.03]">
-                        <p class="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Puntos</p>
-                        <p class="mt-1 text-lg font-bold text-gray-950 dark:text-white">{{ $pointsCount }}</p>
-                    </div>
-                    <div class="rounded-lg border border-gray-200/80 bg-gray-50 px-4 py-3 dark:border-white/10 dark:bg-white/[0.03]">
-                        <p class="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Distancia</p>
-                        <p class="mt-1 text-lg font-bold text-gray-950 dark:text-white">{{ $distanceFormatted }}</p>
-                    </div>
-                    <div class="rounded-lg border border-gray-200/80 bg-gray-50 px-4 py-3 dark:border-white/10 dark:bg-white/[0.03]">
-                        <p class="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Duración</p>
-                        <p class="mt-1 text-lg font-bold text-gray-950 dark:text-white">{{ $durationFormatted }}</p>
-                    </div>
-                    <div class="rounded-lg border border-gray-200/80 bg-gray-50 px-4 py-3 dark:border-white/10 dark:bg-white/[0.03]">
-                        <p class="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Período</p>
-                        <p class="mt-1 text-sm font-semibold text-gray-950 dark:text-white">
-                            @php
-                                $formData = $this->form->getState();
-                                $dateFilter = $formData['dateFilter'] ?? 'today';
-                                $startDate = $formData['startDate'] ?? '';
-                                $endDate = $formData['endDate'] ?? '';
-                            @endphp
+            <div class="gps-report-card relative">
+                @if($reportGenerated && !empty($reportPoints))
+                    <div class="absolute left-3 top-3 z-[500] flex flex-wrap items-center gap-x-4 gap-y-1 rounded-xl border border-white/70 bg-white/90 px-3 py-2 text-xs shadow-lg backdrop-blur-md dark:border-white/10 dark:bg-gray-900/80 dark:text-gray-200">
+                        <span class="inline-flex items-center gap-1 font-semibold text-gray-950 dark:text-white">
+                            <x-filament::icon icon="heroicon-s-map-pin" class="h-3.5 w-3.5 text-emerald-500" />
+                            {{ $pointsCount }}
+                        </span>
+                        <span class="h-3 w-px bg-gray-300 dark:bg-gray-600"></span>
+                        <span class="inline-flex items-center gap-1 font-semibold text-gray-950 dark:text-white">
+                            <x-filament::icon icon="heroicon-s-arrows-right-left" class="h-3.5 w-3.5 text-blue-500" />
+                            {{ $distanceFormatted }}
+                        </span>
+                        <span class="h-3 w-px bg-gray-300 dark:bg-gray-600"></span>
+                        <span class="inline-flex items-center gap-1 font-semibold text-gray-950 dark:text-white">
+                            <x-filament::icon icon="heroicon-s-clock" class="h-3.5 w-3.5 text-amber-500" />
+                            {{ $durationFormatted }}
+                        </span>
+                        @php
+                            $formData = $this->form->getState();
+                            $dateFilter = $formData['dateFilter'] ?? 'today';
+                            $startDate = $formData['startDate'] ?? '';
+                            $endDate = $formData['endDate'] ?? '';
+                        @endphp
+                        <span class="h-3 w-px bg-gray-300 dark:bg-gray-600"></span>
+                        <span class="inline-flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                            <x-filament::icon icon="heroicon-s-calendar-days" class="h-3.5 w-3.5" />
                             @if($dateFilter === 'today') Hoy
                             @elseif($dateFilter === 'yesterday') Ayer
                             @else {{ $startDate }} → {{ $endDate }}
                             @endif
-                        </p>
+</span>
+                        </div>
                     </div>
-                </div>
-            @endif
+                @endif
 
-            <div class="gps-report-card relative">
                 <div wire:ignore>
                     <div id="gps-report-map"></div>
                 </div>
@@ -229,22 +230,19 @@
                 @endif
 
                 @if(!empty($reportPoints))
-                    <div class="gps-report-legend absolute left-4 top-4 z-[500]">
-                        <p class="text-xs font-semibold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
-                            Referencia
-                        </p>
-                        <div class="mt-3 space-y-2 text-sm text-gray-700 dark:text-gray-200">
-                            <div class="flex items-center gap-2">
+                    <div class="gps-report-legend absolute right-3 top-3 z-[500]">
+                        <div class="flex items-center gap-3">
+                            <span class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-gray-700 dark:text-gray-200">
                                 <span class="gps-report-legend-dot bg-slate-900 dark:bg-slate-100"></span>
-                                <span>Punto de inicio</span>
-                            </div>
-                            <div class="flex items-center gap-2">
+                                Inicio
+                            </span>
+                            <span class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-gray-700 dark:text-gray-200">
                                 <span class="gps-report-legend-dot bg-emerald-500"></span>
-                                <span>Recorrido</span>
-                            </div>
-                            <div class="flex items-center gap-2">
+                                Recorrido
+                            </span>
+                            <span class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-gray-700 dark:text-gray-200">
                                 <span class="gps-report-legend-dot bg-emerald-500 ring-4 ring-emerald-500/20"></span>
-                                <span>Punto final</span>
+                                Fin
                             </div>
                         </div>
                     </div>
