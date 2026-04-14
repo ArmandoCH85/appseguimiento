@@ -308,6 +308,25 @@ class GpsRouteReportPage extends Page
         return 'Reporte de Recorrido';
     }
 
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('generateReport')
+                ->label('Generar Reporte')
+                ->icon('heroicon-m-magnifying-glass')
+                ->color('primary')
+                ->action(fn () => $this->generateReport()),
+
+            Action::make('exportToExcel')
+                ->label('Exportar Excel')
+                ->icon('heroicon-m-arrow-down-tray')
+                ->color('success')
+                ->outlined()
+                ->action(fn () => $this->exportToExcel())
+                ->visible(fn () => $this->reportGenerated && ! empty($this->reportPoints)),
+        ];
+    }
+
     private function getReportService(): GpsRouteReportService
     {
         static $service;

@@ -137,24 +137,7 @@
     </style>
 
     <div class="space-y-4">
-        {{-- FILTROS: Formulario Filament v5 --}}
         {{ $this->form }}
-
-        <div class="flex flex-wrap items-center gap-3">
-            <x-filament::button wire:click="generateReport" icon="heroicon-m-magnifying-glass" color="primary">
-                Generar Reporte
-            </x-filament::button>
-
-            @if($reportGenerated && !empty($reportPoints))
-                <x-filament::button wire:click="exportToExcel" icon="heroicon-m-arrow-down-tray" color="success" outlined>
-                    Exportar Excel
-                </x-filament::button>
-            @endif
-
-            <div wire:loading wire:target="generateReport,exportToExcel">
-                <x-filament::loading-indicator class="h-5 w-5 text-primary-500" />
-            </div>
-        </div>
 
         {{-- MAPA — siempre presente, con overlay si no hay datos --}}
         <x-filament::section>
