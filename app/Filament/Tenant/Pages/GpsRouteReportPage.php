@@ -86,25 +86,37 @@ class GpsRouteReportPage extends Page
                 Section::make('Filtros del Reporte')
                     ->icon('heroicon-o-map')
                     ->schema([
-                        Grid::make(12)
+                        Grid::make()
+                            ->columns([
+                                'default' => 1,
+                                'sm'      => 2,
+                                'lg'      => 4,
+                            ])
                             ->schema([
                                 Select::make('selectedDeviceId')
                                     ->label('Dispositivo')
-                                    ->columnSpan(8)
-                                    ->options(fn (): array => $this->getDeviceOptions())
+                                    ->columnSpan([
+                                        'default' => 1,
+                                        'sm'      => 2,
+                                        'lg'      => 2,
+                                    ])
                                     ->searchable()
                                     ->placeholder('Seleccioná un dispositivo')
                                     ->live()
                                     ->afterStateUpdated(fn () => $this->generateReport())
-                                    ->selectablePlaceholder(false),
+                                    ->selectablePlaceholder(false)
+                                    ->options(fn (): array => $this->getDeviceOptions())
+                                    ->getOptionLabelUsing(fn ($value): ?string => $this->getDeviceLabel($value))
+                                    ->getSearchResultsUsing(fn (string $search): array => $this->searchDevices($search))
+                                    ->optionsLimit(50),
 
                                 Select::make('dateFilter')
                                     ->label('Período')
-                                    ->columnSpan(3)
+                                    ->columnSpan(1)
                                     ->options([
-                                        'today' => 'Hoy',
+                                        'today'     => 'Hoy',
                                         'yesterday' => 'Ayer',
-                                        'custom' => 'Personalizado',
+                                        'custom'    => 'Personalizado',
                                     ])
                                     ->default('today')
                                     ->live()
@@ -113,7 +125,7 @@ class GpsRouteReportPage extends Page
 
                                 DatePicker::make('startDate')
                                     ->label('Fecha inicio')
-                                    ->columnSpan(2)
+                                    ->columnSpan(1)
                                     ->visible(fn (callable $get): bool => $get('dateFilter') === 'custom')
                                     ->required(fn (callable $get): bool => $get('dateFilter') === 'custom')
                                     ->live()
@@ -121,14 +133,13 @@ class GpsRouteReportPage extends Page
 
                                 DatePicker::make('endDate')
                                     ->label('Fecha fin')
-                                    ->columnSpan(2)
+                                    ->columnSpan(1)
                                     ->visible(fn (callable $get): bool => $get('dateFilter') === 'custom')
                                     ->required(fn (callable $get): bool => $get('dateFilter') === 'custom')
                                     ->live()
                                     ->afterStateUpdated(fn () => $this->generateReport()),
                             ]),
-                    ])
-                    ->columns(12),
+                    ]),
             ]);
     }
 
@@ -342,6 +353,38 @@ class GpsRouteReportPage extends Page
         ];
     }
 
+    private function getDeviceLabel(string $deviceId): ?string
+    {
+        $device = Device::query()
+            ->select('id', 'imei', 'user_id')
+            ->with('user:id,name')
+            ->find($deviceId);
+
+        if (! $device) {
+            return null;
+        }
+
+        $userName = $device->user?->name ?? 'Sin asignar';
+
+        return "{$device->imei}  ·  {$userName}";
+    }
+
+    private function searchDevices(string $search): array
+    {
+        return Device::query()
+            ->select('id', 'imei', 'user_id')
+            ->with('user:id,name')
+            ->where('imei', 'like', "%{$search}%")
+            ->orWhereHas('user', fn ($q) => $q->where('name', 'like', "%{$search}%"))
+            ->orderBy('imei')
+            ->limit(50)
+            ->get()
+            ->mapWithKeys(fn (Device $device): array => [
+                $device->id => "{$device->imei}  ·  ".($device->user?->name ?? 'Sin asignar'),
+            ])
+            ->all();
+    }
+
     private function getDeviceOptions(): array
     {
         if ($this->deviceOptionsCache !== null) {
@@ -352,9 +395,10 @@ class GpsRouteReportPage extends Page
             ->select('id', 'imei', 'user_id')
             ->with('user:id,name')
             ->orderBy('imei')
+            ->limit(50)
             ->get()
             ->mapWithKeys(fn (Device $device): array => [
-                $device->id => trim($device->imei.' - '.($device->user?->name ?? 'Sin asignar')),
+                $device->id => "{$device->imei}  ·  ".($device->user?->name ?? 'Sin asignar'),
             ])
             ->all();
 

@@ -3,6 +3,22 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <style>
+        .fi-section-content .fi-grid > div {
+            align-items: flex-end;
+        }
+
+        .fi-section-content .fi-select-wrapper .fi-select-input,
+        .fi-section-content .fi-datepicker-wrapper .fi-datepicker-input {
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 0.01em;
+        }
+
+        .fi-section-content .fi-select-option-label {
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 0.01em;
+            white-space: nowrap;
+        }
+
         .gps-report-card {
             display: flex;
             flex-direction: column;
