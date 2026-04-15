@@ -6,10 +6,11 @@ namespace App\Filament\Central\Resources\TenantResource\Pages;
 
 use App\Filament\Central\Resources\TenantResource;
 use App\Models\Central\Tenant;
-use Filament\Actions\DeleteAction;
+use Filament\Actions\Action;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Validation\Rule;
+use Stancl\Tenancy\Jobs\DeleteDatabase;
+use Throwable;
 
 class EditTenant extends EditRecord
 {
@@ -18,7 +19,48 @@ class EditTenant extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            DeleteAction::make(),
+            Action::make('deleteTenant')
+                ->label('Borrar tenant')
+                ->icon('heroicon-o-trash')
+                ->color('danger')
+                ->requiresConfirmation()
+                ->modalHeading('¿Borrar empresa (tenant)?')
+                ->modalDescription('Esto eliminará la base de datos del tenant y su dominio. Esta acción no se puede deshacer.')
+                ->modalSubmitActionLabel('Sí, borrar')
+                ->action(function (): void {
+                    /** @var Tenant $tenant */
+                    $tenant = $this->getRecord();
+
+                    try {
+                        $dbName = $tenant->database()->getName();
+                        $manager = $tenant->database()->manager();
+
+                        if (filled($dbName) && $manager->databaseExists($dbName)) {
+                            (new DeleteDatabase($tenant))->handle();
+                        }
+
+                        $tenant->domains()->delete();
+                        $tenant->delete();
+                    } catch (Throwable $e) {
+                        report($e);
+
+                        Notification::make()
+                            ->danger()
+                            ->title('No se pudo borrar el tenant')
+                            ->body('Ocurrió un error al eliminar la base de datos o el dominio. Revisá los logs del servidor.')
+                            ->send();
+
+                        return;
+                    }
+
+                    Notification::make()
+                        ->success()
+                        ->title('Tenant borrado')
+                        ->body('Se eliminó el tenant, su dominio y su base de datos.')
+                        ->send();
+
+                    $this->redirect(static::getResource()::getUrl('index'));
+                }),
         ];
     }
 
