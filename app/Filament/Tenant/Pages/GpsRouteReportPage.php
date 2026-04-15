@@ -17,7 +17,6 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\Width;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -209,10 +208,10 @@ class GpsRouteReportPage extends Page
 
         // Store full reportPoints in server cache — never goes into Livewire state
         if ($this->reportCacheKey) {
-            Cache::forget($this->reportCacheKey);
+            session()->forget($this->reportCacheKey);
         }
         $this->reportCacheKey = 'gps_report_' . Str::ulid();
-        Cache::put($this->reportCacheKey, $reportPoints, now()->addMinutes(30));
+        session()->put($this->reportCacheKey, $reportPoints);
 
         // Segment → decimate per segment → build mapSegments (polylines) + mapPoints (player)
         $segments             = $reportService->segmentTracks($points);
@@ -281,7 +280,7 @@ class GpsRouteReportPage extends Page
     private function clearReport(): void
     {
         if ($this->reportCacheKey) {
-            Cache::forget($this->reportCacheKey);
+            session()->forget($this->reportCacheKey);
             $this->reportCacheKey = null;
         }
 
@@ -302,7 +301,7 @@ class GpsRouteReportPage extends Page
             return null;
         }
 
-        $cachedPoints = Cache::get($this->reportCacheKey, []);
+        $cachedPoints = session()->get($this->reportCacheKey, []);
 
         if (empty($cachedPoints)) {
             return null;
@@ -354,7 +353,7 @@ class GpsRouteReportPage extends Page
 
         $offset = ($this->currentPage - 1) * $this->perPage;
 
-        return array_slice(Cache::get($this->reportCacheKey, []), $offset, $this->perPage);
+        return array_slice(session()->get($this->reportCacheKey, []), $offset, $this->perPage);
     }
 
     public function getTotalPages(): int
