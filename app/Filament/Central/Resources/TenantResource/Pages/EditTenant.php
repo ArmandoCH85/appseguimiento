@@ -6,7 +6,10 @@ namespace App\Filament\Central\Resources\TenantResource\Pages;
 
 use App\Filament\Central\Resources\TenantResource;
 use App\Models\Central\Tenant;
+use App\Models\Tenant\User as TenantUser;
 use Filament\Actions\Action;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 use Stancl\Tenancy\Jobs\DeleteDatabase;
@@ -19,6 +22,82 @@ class EditTenant extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('changeAdminPassword')
+                ->label('Cambiar clave')
+                ->icon('heroicon-o-key')
+                ->color('gray')
+                ->modalHeading('Cambiar clave del administrador del tenant')
+                ->modalDescription('Se actualizará la contraseña del usuario admin dentro de la base del tenant.')
+                ->form(function (): array {
+                    /** @var Tenant $tenant */
+                    $tenant = $this->getRecord();
+
+                    $adminUsers = $tenant->run(fn () => TenantUser::query()
+                        ->whereHas('roles', fn ($q) => $q->where('name', 'admin'))
+                        ->orderBy('created_at')
+                        ->get()
+                        ->mapWithKeys(fn (TenantUser $u) => [(string) $u->getKey() => "{$u->name} · {$u->email}"])
+                        ->all()
+                    );
+
+                    $defaultUserId = array_key_first($adminUsers);
+
+                    return [
+                        Select::make('user_id')
+                            ->label('Usuario admin')
+                            ->options($adminUsers)
+                            ->required()
+                            ->default($defaultUserId)
+                            ->searchable()
+                            ->native(false),
+                        TextInput::make('new_password')
+                            ->label('Nueva contraseña')
+                            ->password()
+                            ->revealable()
+                            ->required()
+                            ->minLength(8)
+                            ->confirmed(),
+                        TextInput::make('new_password_confirmation')
+                            ->label('Confirmar contraseña')
+                            ->password()
+                            ->revealable()
+                            ->required()
+                            ->minLength(8),
+                    ];
+                })
+                ->action(function (array $data): void {
+                    /** @var Tenant $tenant */
+                    $tenant = $this->getRecord();
+
+                    $updated = $tenant->run(function () use ($data): bool {
+                        $user = TenantUser::query()->find($data['user_id'] ?? null);
+
+                        if (! $user) {
+                            return false;
+                        }
+
+                        $user->password = (string) ($data['new_password'] ?? '');
+                        $user->save();
+
+                        return true;
+                    });
+
+                    if (! $updated) {
+                        Notification::make()
+                            ->danger()
+                            ->title('No se pudo cambiar la clave')
+                            ->body('No se encontró el usuario admin en este tenant.')
+                            ->send();
+
+                        return;
+                    }
+
+                    Notification::make()
+                        ->success()
+                        ->title('Clave actualizada')
+                        ->body('La contraseña del usuario admin fue actualizada correctamente.')
+                        ->send();
+                }),
             Action::make('deleteTenant')
                 ->label('Borrar tenant')
                 ->icon('heroicon-o-trash')

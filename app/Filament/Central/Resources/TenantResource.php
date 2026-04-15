@@ -6,6 +6,7 @@ namespace App\Filament\Central\Resources;
 
 use App\Filament\Central\Resources\TenantResource\Pages;
 use App\Models\Central\Tenant;
+use App\Models\Tenant\User as TenantUser;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
@@ -165,6 +166,63 @@ class TenantResource extends Resource
                                 ->helperText('El dominio no puede modificarse después de la creación.')
                                 ->visible(fn (string $operation): bool => $operation === 'edit'),
                         ]),
+
+                    Section::make('Administrador del tenant')
+                        ->icon('heroicon-o-user-circle')
+                        ->description('Usuario administrador creado junto con esta empresa.')
+                        ->visible(fn (string $operation): bool => $operation === 'edit')
+                        ->schema([
+                            Placeholder::make('tenant_admin_email')
+                                ->label('Correo electrónico')
+                                ->content(function (?Tenant $record): HtmlString|string {
+                                    if (! $record) {
+                                        return '—';
+                                    }
+
+                                    $admin = $record->run(fn (): ?TenantUser => TenantUser::query()
+                                        ->whereHas('roles', fn ($q) => $q->where('name', 'admin'))
+                                        ->orderBy('created_at')
+                                        ->first()
+                                    );
+
+                                    if (! $admin) {
+                                        return new HtmlString('<span class="text-gray-500">No se encontró un usuario admin en este tenant.</span>');
+                                    }
+
+                                    return new HtmlString('<span class="font-mono text-sm">' . e($admin->email) . '</span>');
+                                }),
+                            Placeholder::make('tenant_admin_name')
+                                ->label('Nombre')
+                                ->content(function (?Tenant $record): string {
+                                    if (! $record) {
+                                        return '—';
+                                    }
+
+                                    $admin = $record->run(fn (): ?TenantUser => TenantUser::query()
+                                        ->whereHas('roles', fn ($q) => $q->where('name', 'admin'))
+                                        ->orderBy('created_at')
+                                        ->first()
+                                    );
+
+                                    return $admin?->name ?? '—';
+                                }),
+                            Placeholder::make('tenant_admin_status')
+                                ->label('Estado')
+                                ->content(function (?Tenant $record): string {
+                                    if (! $record) {
+                                        return '—';
+                                    }
+
+                                    $admin = $record->run(fn (): ?TenantUser => TenantUser::query()
+                                        ->whereHas('roles', fn ($q) => $q->where('name', 'admin'))
+                                        ->orderBy('created_at')
+                                        ->first()
+                                    );
+
+                                    return $admin ? ($admin->is_active ? 'Activo' : 'Inactivo') : '—';
+                                }),
+                        ])
+                        ->columns(1),
 
                     Section::make('Cuenta de Administrador Inicial')
                         ->icon('heroicon-o-key')
