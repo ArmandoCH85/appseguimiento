@@ -44,6 +44,9 @@ class GpsRouteReportPage extends Page
 
     public array $reportPoints = [];
 
+    /** Decimated points for map + player (1 pt/min). Table always uses $reportPoints. */
+    public array $mapPoints = [];
+
     public array $reportSummary = [];
 
     public int $pointsCount = 0;
@@ -201,14 +204,30 @@ class GpsRouteReportPage extends Page
             ];
         }, $pointsArray, array_keys($pointsArray));
 
-        // Segment tracks by time gaps (>5 min) to avoid connecting unrelated trips
+        // Segment → decimate per segment → build mapSegments (polylines) + mapPoints (player)
         $segments             = $reportService->segmentTracks($points);
-        $this->reportSegments = array_map(function (Collection $segment): array {
-            return $segment->map(fn (object $track): array => [
-                'latitude'  => (float) $track->latitude,
-                'longitude' => (float) $track->longitude,
-            ])->all();
-        }, $segments);
+        $this->reportSegments = [];
+        $this->mapPoints      = [];
+
+        foreach ($segments as $segment) {
+            $decimated = $reportService->decimateSegmentForMap($segment);
+
+            $this->reportSegments[] = array_map(fn (object $p): array => [
+                'latitude'  => (float) $p->latitude,
+                'longitude' => (float) $p->longitude,
+            ], $decimated);
+
+            foreach ($decimated as $p) {
+                $this->mapPoints[] = [
+                    'latitude'  => (float) $p->latitude,
+                    'longitude' => (float) $p->longitude,
+                    'time_human' => now()
+                        ->setTimestamp((int) ($p->time / 1000))
+                        ->setTimezone('America/Lima')
+                        ->format('d/m/Y H:i:s'),
+                ];
+            }
+        }
 
         $distance = $pointsCount > 1 ? $reportService->calculateTotalDistance($points) : 0;
         $duration = $reportService->calculateDuration($points);
@@ -219,7 +238,7 @@ class GpsRouteReportPage extends Page
         $this->reportGenerated   = $pointsCount > 0;
         $this->currentPage       = 1;
 
-        $this->dispatch('gps-report-generated', points: $this->reportPoints, segments: $this->reportSegments);
+        $this->dispatch('gps-report-generated', points: $this->mapPoints, segments: $this->reportSegments);
 
         if ($pointsCount > 0) {
             $this->firstTimeFormatted = now()
@@ -251,13 +270,14 @@ class GpsRouteReportPage extends Page
 
     private function clearReport(): void
     {
-        $this->reportPoints = [];
+        $this->reportPoints   = [];
+        $this->mapPoints      = [];
         $this->reportSegments = [];
-        $this->pointsCount = 0;
-        $this->distanceFormatted = '0 m';
-        $this->durationFormatted = '0min';
-        $this->reportGenerated = false;
-        $this->currentPage = 1;
+        $this->pointsCount        = 0;
+        $this->distanceFormatted  = '0 m';
+        $this->durationFormatted  = '0min';
+        $this->reportGenerated    = false;
+        $this->currentPage        = 1;
     }
 
     public function exportToExcel(): ?BinaryFileResponse

@@ -403,6 +403,11 @@
     <div class="space-y-4">
         {{ $this->form }}
 
+        <div wire:loading.flex class="items-center gap-3 rounded-lg border border-primary-200 bg-primary-50 px-4 py-3 dark:border-primary-800 dark:bg-primary-950">
+            <x-filament::loading-indicator class="h-5 w-5 text-primary-600 dark:text-primary-400" />
+            <span class="text-sm font-medium text-primary-700 dark:text-primary-300">Cargando recorrido…</span>
+        </div>
+
         <x-filament::section>
             <x-slot name="heading">
                 <div class="flex items-center gap-2">
@@ -448,7 +453,7 @@
 
                 <div id="gps-player-container">
                     @if(!empty($reportPoints))
-                        <div id="gps-player" class="gps-report-player" wire:key="gps-player-{{ count($reportPoints) }}">
+                        <div id="gps-player" class="gps-report-player" wire:key="gps-player-{{ count($mapPoints) }}">
                             <button id="gps-player-reset" type="button" title="Reiniciar" aria-label="Reiniciar" class="reset-btn">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
                                     <path d="M16 10a6 6 0 1 1-2.2-4.6"/>
@@ -460,13 +465,13 @@
                                     <path d="M8 6.5 14 10l-6 3.5z"/>
                                 </svg>
                             </button>
-                            <input id="gps-player-slider" type="range" min="0" max="{{ max(count($reportPoints) - 1, 0) }}" value="0" aria-label="Progreso" />
+                            <input id="gps-player-slider" type="range" min="0" max="{{ max(count($mapPoints) - 1, 0) }}" value="0" aria-label="Progreso" />
                             <div id="gps-player-timestamp" class="gps-player-timestamp" aria-live="polite" aria-atomic="true">
                                 <span id="gps-player-time-text" class="font-mono text-[10px] md:text-[11px] font-medium text-slate-700 dark:text-slate-200 whitespace-nowrap tabular-nums">
-                                    {{ $reportPoints[0]['time_human'] ?? '—' }}
+                                    {{ $mapPoints[0]['time_human'] ?? '—' }}
                                 </span>
                             </div>
-                            <span id="gps-player-counter" class="text-xs font-mono font-semibold text-gray-400 dark:text-gray-500 whitespace-nowrap tabular-nums">0/{{ count($reportPoints) }}</span>
+                            <span id="gps-player-counter" class="text-xs font-mono font-semibold text-gray-400 dark:text-gray-500 whitespace-nowrap tabular-nums">0/{{ count($mapPoints) }}</span>
                             <div class="flex items-center gap-0.5">
                                 <button type="button" class="speed-btn active" data-speed="1" aria-label="Velocidad 1x" aria-pressed="true">1x</button>
                                 <button type="button" class="speed-btn" data-speed="2" aria-label="Velocidad 2x" aria-pressed="false">2x</button>
@@ -497,7 +502,7 @@
     </div>
 
     <script>
-        window.__gpsReportPoints = @json($reportPoints);
+        window.__gpsReportPoints = @json($mapPoints);
         window.__gpsReportSegments = @json($reportSegments);
 
         if (!window.__gpsPlayer) {

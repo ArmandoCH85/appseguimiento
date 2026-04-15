@@ -110,6 +110,36 @@ class GpsRouteReportService
             ->get();
     }
 
+    /**
+     * Decimate a segment to ~1 point per minute for map rendering.
+     * Always keeps first and last point. Short segments (≤2 points) are returned as-is.
+     *
+     * @return object[]
+     */
+    public function decimateSegmentForMap(Collection $segment, int $intervalMs = 60_000): array
+    {
+        $arr   = $segment->all();
+        $count = count($arr);
+
+        if ($count <= 2) {
+            return $arr;
+        }
+
+        $result       = [$arr[0]];
+        $lastKeptTime = (int) $arr[0]->time;
+
+        for ($i = 1; $i < $count - 1; $i++) {
+            if ((int) $arr[$i]->time - $lastKeptTime >= $intervalMs) {
+                $result[]     = $arr[$i];
+                $lastKeptTime = (int) $arr[$i]->time;
+            }
+        }
+
+        $result[] = $arr[$count - 1];
+
+        return $result;
+    }
+
     public function segmentTracks(Collection $points, int $gapMs = self::SEGMENT_GAP_MS): array
     {
         $pointsArray = $points->all();
