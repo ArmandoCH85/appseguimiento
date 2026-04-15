@@ -3,30 +3,12 @@
 declare(strict_types=1);
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 
+// Index ['device_id', 'time'] already created in 2026_04_13_000002_create_gps_tracks_table.php
+// This migration is intentionally a no-op to avoid creating a duplicate index.
 return new class extends Migration
 {
-    public function up(): void
-    {
-        if (! Schema::hasTable('gps_tracks')) {
-            return;
-        }
+    public function up(): void {}
 
-        Schema::table('gps_tracks', function (Blueprint $table) {
-            $table->index(['device_id', 'time'], 'gps_tracks_device_time_idx');
-        });
-    }
-
-    public function down(): void
-    {
-        if (! Schema::hasTable('gps_tracks')) {
-            return;
-        }
-
-        Schema::table('gps_tracks', function (Blueprint $table) {
-            $table->dropIndex('gps_tracks_device_time_idx');
-        });
-    }
+    public function down(): void {}
 };

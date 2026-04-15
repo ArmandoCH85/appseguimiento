@@ -6,7 +6,6 @@ namespace App\Filament\Tenant\Pages;
 
 use App\Exports\GpsTrackExport;
 use App\Models\Tenant\Device;
-use App\Models\Tenant\GpsTrack;
 use App\Services\GpsRouteReportService;
 use Carbon\Carbon;
 use Filament\Actions\Action;
@@ -170,7 +169,7 @@ class GpsRouteReportPage extends Page
         $pointsArray = $points->all();
         $pointsCount = count($pointsArray);
 
-        $this->reportPoints = array_map(function (GpsTrack $track, int $index) use ($pointsArray, $pointsCount, $reportService): array {
+        $this->reportPoints = array_map(function (object $track, int $index) use ($pointsArray, $pointsCount, $reportService): array {
             $timeHuman = now()
                 ->setTimestamp((int) ($track->time / 1000))
                 ->setTimezone('America/Lima')
@@ -179,8 +178,8 @@ class GpsRouteReportPage extends Page
             $speedHuman = '-';
             if ($index > 0 && $pointsCount > 1) {
                 $prevTrack = $pointsArray[$index - 1];
-                $timeDiff = (int) $track->time - (int) $prevTrack->time;
-                $speed = $reportService->calculateSpeed(
+                $timeDiff  = (int) $track->time - (int) $prevTrack->time;
+                $speed     = $reportService->calculateSpeed(
                     (float) $prevTrack->latitude,
                     (float) $prevTrack->longitude,
                     (float) $track->latitude,
@@ -191,45 +190,45 @@ class GpsRouteReportPage extends Page
             }
 
             return [
-                'latitude' => (float) $track->latitude,
-                'longitude' => (float) $track->longitude,
-                'accuracy' => $track->accuracy,
-                'accuracy_human' => "{$track->accuracy} m",
-                'time' => $track->time,
-                'time_human' => $timeHuman,
-                'speed_human' => $speedHuman,
-                'index' => $index + 1,
+                'latitude'      => (float) $track->latitude,
+                'longitude'     => (float) $track->longitude,
+                'accuracy'      => $track->accuracy,
+                'accuracy_human'=> "{$track->accuracy} m",
+                'time'          => $track->time,
+                'time_human'    => $timeHuman,
+                'speed_human'   => $speedHuman,
+                'index'         => $index + 1,
             ];
         }, $pointsArray, array_keys($pointsArray));
 
         // Segment tracks by time gaps (>5 min) to avoid connecting unrelated trips
-        $segments = $reportService->segmentTracks($points);
+        $segments             = $reportService->segmentTracks($points);
         $this->reportSegments = array_map(function (Collection $segment): array {
-            return $segment->map(fn (GpsTrack $track): array => [
-                'latitude' => (float) $track->latitude,
+            return $segment->map(fn (object $track): array => [
+                'latitude'  => (float) $track->latitude,
                 'longitude' => (float) $track->longitude,
             ])->all();
         }, $segments);
 
-        $distance = $points->count() > 1 ? $reportService->calculateTotalDistance($points) : 0;
+        $distance = $pointsCount > 1 ? $reportService->calculateTotalDistance($points) : 0;
         $duration = $reportService->calculateDuration($points);
 
-        $this->pointsCount = $points->count();
+        $this->pointsCount       = $pointsCount;
         $this->distanceFormatted = $reportService->formatDistance($distance);
         $this->durationFormatted = $reportService->formatDuration($duration);
-        $this->reportGenerated = $points->count() > 0;
-        $this->currentPage = 1;
+        $this->reportGenerated   = $pointsCount > 0;
+        $this->currentPage       = 1;
 
         $this->dispatch('gps-report-generated', points: $this->reportPoints, segments: $this->reportSegments);
 
-        if ($points->count() > 0) {
+        if ($pointsCount > 0) {
             $this->firstTimeFormatted = now()
-                ->setTimestamp((int) ($points->first()->time / 1000))
+                ->setTimestamp((int) ($pointsArray[0]->time / 1000))
                 ->setTimezone('America/Lima')
                 ->format('d/m/Y H:i:s');
 
             $this->lastTimeFormatted = now()
-                ->setTimestamp((int) ($points->last()->time / 1000))
+                ->setTimestamp((int) ($pointsArray[$pointsCount - 1]->time / 1000))
                 ->setTimezone('America/Lima')
                 ->format('d/m/Y H:i:s');
         }

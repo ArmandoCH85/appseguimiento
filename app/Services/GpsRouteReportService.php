@@ -29,11 +29,18 @@ class GpsRouteReportService
 
     public function calculateTotalDistance(Collection $points): float
     {
+        $pointsArray = $points->all();
+        $count        = count($pointsArray);
+
+        if ($count < 2) {
+            return 0.0;
+        }
+
         $totalDistance = 0.0;
 
-        for ($i = 1; $i < $points->count(); $i++) {
-            $prev = $points[$i - 1];
-            $current = $points[$i];
+        for ($i = 1; $i < $count; $i++) {
+            $prev    = $pointsArray[$i - 1];
+            $current = $pointsArray[$i];
 
             $totalDistance += $this->calculateDistance(
                 (float) $prev->latitude,
@@ -95,32 +102,33 @@ class GpsRouteReportService
     public function getTracksForReport(string $deviceId, ?int $startTimeMs = null, ?int $endTimeMs = null): Collection
     {
         return GpsTrack::query()
+            ->select(['latitude', 'longitude', 'time', 'accuracy'])
             ->where('device_id', $deviceId)
             ->when($startTimeMs !== null && $endTimeMs !== null, fn ($q) => $q->whereBetween('time', [$startTimeMs, $endTimeMs]))
             ->orderBy('time', 'asc')
+            ->toBase()
             ->get();
     }
 
     public function segmentTracks(Collection $points, int $gapMs = self::SEGMENT_GAP_MS): array
     {
-        if ($points->count() === 0) {
+        $pointsArray = $points->all();
+        $count        = count($pointsArray);
+
+        if ($count === 0) {
             return [];
         }
 
-        $segments = [];
-        $currentSegment = [$points[0]];
+        $segments       = [];
+        $currentSegment = [$pointsArray[0]];
 
-        for ($i = 1; $i < $points->count(); $i++) {
-            $prevTime = (int) $points[$i - 1]->time;
-            $currentTime = (int) $points[$i]->time;
-            $gap = $currentTime - $prevTime;
-
-            if ($gap > $gapMs) {
-                $segments[] = collect($currentSegment);
+        for ($i = 1; $i < $count; $i++) {
+            if ((int) $pointsArray[$i]->time - (int) $pointsArray[$i - 1]->time > $gapMs) {
+                $segments[]     = collect($currentSegment);
                 $currentSegment = [];
             }
 
-            $currentSegment[] = $points[$i];
+            $currentSegment[] = $pointsArray[$i];
         }
 
         $segments[] = collect($currentSegment);
