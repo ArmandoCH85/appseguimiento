@@ -17,6 +17,8 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\Width;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -42,9 +44,10 @@ class GpsRouteReportPage extends Page
 
     private ?array $deviceOptionsCache = null;
 
-    public array $reportPoints = [];
+    /** Cache key for full reportPoints — kept out of Livewire state to avoid large payloads. */
+    public ?string $reportCacheKey = null;
 
-    /** Decimated points for map + player (1 pt/min). Table always uses $reportPoints. */
+    /** Decimated points for map + player (1 pt/min). Full data lives in cache. */
     public array $mapPoints = [];
 
     public array $reportSummary = [];
@@ -172,7 +175,7 @@ class GpsRouteReportPage extends Page
         $pointsArray = $points->all();
         $pointsCount = count($pointsArray);
 
-        $this->reportPoints = array_map(function (object $track, int $index) use ($pointsArray, $pointsCount, $reportService): array {
+        $reportPoints = array_map(function (object $track, int $index) use ($pointsArray, $pointsCount, $reportService): array {
             $timeHuman = now()
                 ->setTimestamp((int) ($track->time / 1000))
                 ->setTimezone('America/Lima')
@@ -203,6 +206,13 @@ class GpsRouteReportPage extends Page
                 'index'         => $index + 1,
             ];
         }, $pointsArray, array_keys($pointsArray));
+
+        // Store full reportPoints in server cache — never goes into Livewire state
+        if ($this->reportCacheKey) {
+            Cache::forget($this->reportCacheKey);
+        }
+        $this->reportCacheKey = 'gps_report_' . Str::ulid();
+        Cache::put($this->reportCacheKey, $reportPoints, now()->addMinutes(30));
 
         // Segment → decimate per segment → build mapSegments (polylines) + mapPoints (player)
         $segments             = $reportService->segmentTracks($points);
@@ -270,32 +280,42 @@ class GpsRouteReportPage extends Page
 
     private function clearReport(): void
     {
-        $this->reportPoints   = [];
-        $this->mapPoints      = [];
-        $this->reportSegments = [];
-        $this->pointsCount        = 0;
-        $this->distanceFormatted  = '0 m';
-        $this->durationFormatted  = '0min';
-        $this->reportGenerated    = false;
-        $this->currentPage        = 1;
+        if ($this->reportCacheKey) {
+            Cache::forget($this->reportCacheKey);
+            $this->reportCacheKey = null;
+        }
+
+        $this->mapPoints         = [];
+        $this->reportSegments    = [];
+        $this->pointsCount       = 0;
+        $this->distanceFormatted = '0 m';
+        $this->durationFormatted = '0min';
+        $this->reportGenerated   = false;
+        $this->currentPage       = 1;
     }
 
     public function exportToExcel(): ?BinaryFileResponse
     {
         $data = $this->form->getState();
 
-        if (blank($data['selectedDeviceId'] ?? null) || empty($this->reportPoints)) {
+        if (blank($data['selectedDeviceId'] ?? null) || ! $this->reportCacheKey) {
+            return null;
+        }
+
+        $cachedPoints = Cache::get($this->reportCacheKey, []);
+
+        if (empty($cachedPoints)) {
             return null;
         }
 
         $reportService = $this->getReportService();
 
-        $points = collect($this->reportPoints)->map(function (array $point): object {
-            $obj = new \stdClass;
-            $obj->latitude = $point['latitude'];
+        $points = collect($cachedPoints)->map(function (array $point): object {
+            $obj            = new \stdClass;
+            $obj->latitude  = $point['latitude'];
             $obj->longitude = $point['longitude'];
-            $obj->accuracy = $point['accuracy'];
-            $obj->time = $point['time'];
+            $obj->accuracy  = $point['accuracy'];
+            $obj->time      = $point['time'];
 
             return $obj;
         });
@@ -328,14 +348,18 @@ class GpsRouteReportPage extends Page
 
     public function getPaginatedPoints(): array
     {
+        if (! $this->reportCacheKey) {
+            return [];
+        }
+
         $offset = ($this->currentPage - 1) * $this->perPage;
 
-        return array_slice($this->reportPoints, $offset, $this->perPage);
+        return array_slice(Cache::get($this->reportCacheKey, []), $offset, $this->perPage);
     }
 
     public function getTotalPages(): int
     {
-        return (int) ceil(count($this->reportPoints) / $this->perPage);
+        return (int) ceil($this->pointsCount / $this->perPage);
     }
 
     public static function canAccess(): bool
@@ -368,7 +392,7 @@ class GpsRouteReportPage extends Page
                 ->color('success')
                 ->outlined()
                 ->action(fn () => $this->exportToExcel())
-                ->visible(fn () => $this->reportGenerated && ! empty($this->reportPoints)),
+                ->visible(fn () => $this->reportGenerated && $this->pointsCount > 0),
         ];
     }
 

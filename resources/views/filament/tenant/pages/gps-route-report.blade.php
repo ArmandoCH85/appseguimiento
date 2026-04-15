@@ -417,7 +417,7 @@
             </x-slot>
 
             <div class="gps-report-card relative">
-                @if($reportGenerated && !empty($reportPoints))
+                @if($reportGenerated && $pointsCount > 0)
                     <div class="absolute left-3 top-3 z-[500] flex items-center gap-2 rounded-lg border border-gray-200/80 bg-white px-2.5 py-1.5 shadow dark:border-white/10 dark:bg-gray-900">
                         <x-filament::badge color="success" size="sm">
                             <x-filament::icon icon="heroicon-s-map-pin" class="h-3.5 w-3.5" />
@@ -452,7 +452,7 @@
                 </div>
 
                 <div id="gps-player-container">
-                    @if(!empty($reportPoints))
+                    @if($pointsCount > 0)
                         <div id="gps-player" class="gps-report-player" wire:key="gps-player-{{ count($mapPoints) }}">
                             <button id="gps-player-reset" type="button" title="Reiniciar" aria-label="Reiniciar" class="reset-btn">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
@@ -481,7 +481,7 @@
                     @endif
                 </div>
 
-                @if($reportGenerated && empty($reportPoints))
+                @if($reportGenerated && $pointsCount === 0)
                     <div class="gps-report-empty-overlay">
                         <div class="gps-report-empty-panel">
                             <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300">
