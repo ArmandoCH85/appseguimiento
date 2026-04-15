@@ -6,6 +6,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Stancl\Tenancy\Exceptions\TenantCouldNotBeIdentifiedOnDomainException;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -30,6 +31,12 @@ class InitializeTenancyByDomainIfApplicable
             return $next($request);
         }
 
-        return $this->initializeTenancy->handle($request, $next);
+        try {
+            return $this->initializeTenancy->handle($request, $next);
+        } catch (TenantCouldNotBeIdentifiedOnDomainException) {
+            return response()->view('errors.tenant-not-found', [
+                'domain' => $host,
+            ], 404);
+        }
     }
 }
