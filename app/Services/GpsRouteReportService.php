@@ -94,15 +94,11 @@ class GpsRouteReportService
 
     public function getTracksForReport(string $deviceId, ?int $startTimeMs = null, ?int $endTimeMs = null): Collection
     {
-        $query = GpsTrack::query()
+        return GpsTrack::query()
             ->where('device_id', $deviceId)
-            ->orderBy('time', 'asc');
-
-        if ($startTimeMs !== null && $endTimeMs !== null) {
-            $query->whereBetween('time', [$startTimeMs, $endTimeMs]);
-        }
-
-        return $query->get();
+            ->when($startTimeMs !== null && $endTimeMs !== null, fn ($q) => $q->whereBetween('time', [$startTimeMs, $endTimeMs]))
+            ->orderBy('time', 'asc')
+            ->get();
     }
 
     public function segmentTracks(Collection $points, int $gapMs = self::SEGMENT_GAP_MS): array

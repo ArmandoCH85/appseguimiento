@@ -9,10 +9,9 @@ use App\Filament\Tenant\Resources\SubmissionResource\Pages;
 use App\Models\Tenant\Submission;
 use App\Models\Tenant\SubmissionResponse;
 use Carbon\Carbon;
+use Filament\Actions\Action as InfolistAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Support\Enums\ActionSize;
-use Filament\Actions\Action as InfolistAction;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -131,23 +130,29 @@ class SubmissionResource extends Resource
 
             Section::make('Respuestas')
                 ->icon('heroicon-o-clipboard-document-check')
-                ->schema(fn (?Submission $record): array => static::buildResponseEntries($record)),
+                ->schema(function (?Submission $record) {
+                    if (! $record) {
+                        return [];
+                    }
+
+                    $cards = static::buildResponseCardsData($record);
+
+                    return [
+                        TextEntry::make('responses_display')
+                            ->hiddenLabel()
+                            ->state(new HtmlString(
+                                view('filament.tenant.components.responses-cards', [
+                                    'cards' => $cards,
+                                ])->render()
+                            ))
+                            ->html(),
+                    ];
+                }),
         ]);
     }
 
-    /**
-     * Construye las entradas de respuesta para el infolist.
-     * Maneja JSON decoding para arrays (checkbox), descarga para archivos,
-     * y mapeo de valores a labels para opciones.
-     *
-     * @return array<int, mixed>
-     */
-    protected static function buildResponseEntries(?Submission $record): array
+    protected static function buildResponseCardsData(Submission $record): array
     {
-        if (! $record) {
-            return [];
-        }
-
         $record->loadMissing([
             'responses',
             'formVersion.form.fields.options',
@@ -165,122 +170,83 @@ class SubmissionResource extends Resource
 
         return $record->responses
             ->sortBy(fn (SubmissionResponse $r) => $r->field_name)
-            ->map(fn (SubmissionResponse $response) => static::buildResponseEntry($response, $optionsMap, $record))
+            ->map(function (SubmissionResponse $response) use ($optionsMap, $record, $fields): array {
+                $fieldName = $response->field_name;
+                $fieldType = $response->field_type;
+                $value = $response->value;
+                $options = $optionsMap[$fieldName] ?? [];
+                $label = $fields->where('name', $fieldName)->first()?->label ?? $fieldName;
+                $config = static::getFieldTypeConfig($fieldType);
+
+                $valueResult = match ($fieldType) {
+                    FormFieldType::Checkbox->value => static::resolveCheckboxValue($value, $options),
+                    FormFieldType::File->value => static::resolveFileValue($value, $record),
+                    FormFieldType::Select->value, FormFieldType::Radio->value => static::resolveOptionValue($value, $options),
+                    FormFieldType::Date->value => static::resolveDateValue($value),
+                    FormFieldType::Time->value => static::resolveTimeValue($value),
+                    default => static::resolveTextValue($value),
+                };
+
+                return [
+                    'label' => $label,
+                    'icon' => $config['icon'],
+                    'color' => $config['color'],
+                    'type_label' => $config['type_label'],
+                    'value_type' => $valueResult['type'],
+                    'value_data' => $valueResult['data'],
+                ];
+            })
+            ->values()
             ->all();
     }
 
-    /**
-     * Construye una TextEntry según el tipo de campo.
-     */
-    protected static function buildResponseEntry(
-        SubmissionResponse $response,
-        array $optionsMap,
-        Submission $submission,
-    ): TextEntry {
-        $fieldName = $response->field_name;
-        $fieldType = $response->field_type;
-        $value = $response->value;
-        $options = $optionsMap[$fieldName] ?? [];
-
-        // Label legible
-        $label = static::getFieldLabel($submission, $fieldName);
-
+    protected static function getFieldTypeConfig(string $fieldType): array
+    {
         return match ($fieldType) {
-            FormFieldType::Checkbox->value => static::buildArrayEntry($label, $value, $options),
-
-            FormFieldType::File->value => static::buildFileEntry($label, $value, $submission),
-
-            FormFieldType::Select->value, FormFieldType::Radio->value => static::buildOptionEntry($label, $value, $options),
-
-            FormFieldType::Date->value => TextEntry::make('response_'.$fieldName)
-                ->label($label)
-                ->state(static::formatDate($value)),
-
-            FormFieldType::Time->value => TextEntry::make('response_'.$fieldName)
-                ->label($label)
-                ->state(static::formatTime($value)),
-
-            default => TextEntry::make('response_'.$fieldName)
-                ->label($label)
-                ->state($value)
-                ->placeholder('Sin respuesta'),
+            FormFieldType::Text->value => ['icon' => 'heroicon-o-document-text', 'color' => 'blue', 'type_label' => 'Texto'],
+            FormFieldType::Textarea->value => ['icon' => 'heroicon-o-bars-3', 'color' => 'blue', 'type_label' => 'Texto'],
+            FormFieldType::Number->value => ['icon' => 'heroicon-o-hashtag', 'color' => 'violet', 'type_label' => 'Num'],
+            FormFieldType::Select->value => ['icon' => 'heroicon-o-chevron-down', 'color' => 'amber', 'type_label' => 'Lista'],
+            FormFieldType::Radio->value => ['icon' => 'heroicon-o-signal', 'color' => 'amber', 'type_label' => 'Opción'],
+            FormFieldType::Checkbox->value => ['icon' => 'heroicon-o-check-circle', 'color' => 'emerald', 'type_label' => 'Multi'],
+            FormFieldType::Date->value => ['icon' => 'heroicon-o-calendar-days', 'color' => 'rose', 'type_label' => 'Fecha'],
+            FormFieldType::Time->value => ['icon' => 'heroicon-o-clock', 'color' => 'indigo', 'type_label' => 'Hora'],
+            FormFieldType::File->value => ['icon' => 'heroicon-o-paper-clip', 'color' => 'cyan', 'type_label' => 'Archivo'],
+            default => ['icon' => 'heroicon-o-question-mark-circle', 'color' => 'gray', 'type_label' => ''],
         };
     }
 
-    /**
-     * Obtiene el label legible de un campo desde el formulario.
-     */
-    protected static function getFieldLabel(Submission $submission, string $fieldName): string
+    protected static function resolveCheckboxValue(?string $value, array $options): array
     {
-        $fields = $submission->formVersion?->form?->fields ?? collect();
-
-        return $fields->where('name', $fieldName)->first()?->label ?? $fieldName;
-    }
-
-    /**
-     * Construye una entrada para valores de array (Checkbox).
-     */
-    protected static function buildArrayEntry(string $label, ?string $value, array $options): TextEntry
-    {
-        $decoded = json_decode($value, true);
+        $decoded = json_decode($value ?? '', true);
 
         if (! is_array($decoded) || $decoded === []) {
-            return TextEntry::make('response_'.$label)
-                ->label($label)
-                ->state('Sin selección')
-                ->placeholder('Sin respuesta');
+            return ['type' => 'empty', 'data' => 'Sin selección'];
         }
 
-        $items = array_map(
-            fn ($v) => $options[$v] ?? $v,
-            $decoded,
-        );
+        $items = array_map(fn ($v) => $options[$v] ?? $v, $decoded);
 
-        $html = '<ul class="list-disc list-inside space-y-0.5 text-sm text-gray-800">';
-        foreach ($items as $item) {
-            $html .= '<li>'.e($item).'</li>';
-        }
-        $html .= '</ul>';
-
-        return TextEntry::make('response_'.$label)
-            ->label($label)
-            ->state(new HtmlString($html))
-            ->html();
+        return ['type' => 'checkbox', 'data' => $items];
     }
 
-    /**
-     * Construye una entrada para opciones (Select/Radio).
-     */
-    protected static function buildOptionEntry(string $label, ?string $value, array $options): TextEntry
+    protected static function resolveOptionValue(?string $value, array $options): array
     {
         if ($value === '' || $value === null) {
-            return TextEntry::make('response_'.$label)
-                ->label($label)
-                ->state('Sin respuesta')
-                ->placeholder('Sin respuesta');
+            return ['type' => 'empty', 'data' => 'Sin respuesta'];
         }
 
         $display = $options[$value] ?? $value;
 
-        return TextEntry::make('response_'.$label)
-            ->label($label)
-            ->state($display);
+        return ['type' => 'option', 'data' => $display];
     }
 
-    /**
-     * Construye una entrada con enlace de descarga para archivos.
-     * Soporta archivos simples o múltiples (JSON array).
-     */
-    protected static function buildFileEntry(string $label, ?string $value, Submission $submission): TextEntry
+    protected static function resolveFileValue(?string $value, Submission $submission): array
     {
         $allMedia = $submission->getMedia('submissions');
 
         if (empty($value)) {
             if ($allMedia->isEmpty()) {
-                return TextEntry::make('response_'.$label)
-                    ->label($label)
-                    ->state('Sin archivo')
-                    ->placeholder('Sin archivo');
+                return ['type' => 'empty', 'data' => 'Sin archivo'];
             }
 
             $value = json_encode($allMedia->pluck('file_name')->toArray());
@@ -289,103 +255,71 @@ class SubmissionResource extends Resource
         $decoded = json_decode($value, true);
         $fileNames = is_array($decoded) ? $decoded : [$value];
 
-        $htmlParts = [];
+        $files = [];
 
         foreach ($fileNames as $fileName) {
             $media = $allMedia->firstWhere('file_name', $fileName);
 
             if (! $media) {
-                // Si no encontramos el media, mostramos el nombre igual
-                $htmlParts[] = sprintf(
-                    '<div class="inline-flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-md text-sm text-gray-600">'.
-                    '<span>%s</span>'.
-                    '<span class="text-gray-400">(no disponible)</span>'.
-                    '</div>',
-                    e($fileName)
-                );
+                $files[] = [
+                    'name' => $fileName,
+                    'url' => null,
+                    'size' => null,
+                    'available' => false,
+                ];
 
                 continue;
             }
 
-            $url = route('tenant.submissions.files.show', [
-                'submission' => $submission,
-                'filename' => $fileName,
-            ]);
-            $size = static::formatFileSize($media->size);
-
-            $htmlParts[] = sprintf(
-                '<a href="%s" target="_blank" class="inline-flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-md text-sm font-medium text-gray-800 transition-colors no-underline hover:no-underline">'.
-                '<span>%s</span>'.
-                '<span class="text-gray-500">(%s)</span>'.
-                '<span class="text-gray-400">·</span>'.
-                '<span class="text-primary-600 hover:underline">Descargar</span>'.
-                '</a>',
-                e($url),
-                e($fileName),
-                e($size)
-            );
+            $files[] = [
+                'name' => $fileName,
+                'url' => route('tenant.submissions.files.show', [
+                    'submission' => $submission,
+                    'filename' => $fileName,
+                ]),
+                'size' => static::formatFileSize($media->size),
+                'available' => true,
+            ];
         }
 
-        $html = '<div class="flex flex-wrap gap-2">'.implode('', $htmlParts).'</div>';
-
-        return TextEntry::make('response_'.$label)
-            ->label($label)
-            ->state(new HtmlString($html))
-            ->html();
+        return ['type' => 'file', 'data' => $files];
     }
 
-    /**
-     * Formatea una fecha ISO a formato legible.
-     */
-    protected static function formatDate(?string $value): string
+    protected static function resolveDateValue(?string $value): array
     {
         if (empty($value)) {
-            return 'Sin fecha';
+            return ['type' => 'empty', 'data' => 'Sin fecha'];
         }
 
         try {
-            return Carbon::parse($value)->format('d/m/Y');
+            return ['type' => 'date', 'data' => Carbon::parse($value)->format('d/m/Y')];
         } catch (\Exception) {
-            return $value;
+            return ['type' => 'text', 'data' => $value];
         }
     }
 
-    /**
-     * Formatea una hora ISO a formato legible.
-     */
-    protected static function formatTime(?string $value): string
+    protected static function resolveTimeValue(?string $value): array
     {
         if (empty($value)) {
-            return 'Sin hora';
+            return ['type' => 'empty', 'data' => 'Sin hora'];
         }
 
         try {
-            return Carbon::parse($value)->format('H:i');
+            return ['type' => 'time', 'data' => Carbon::parse($value)->format('H:i')];
         } catch (\Exception) {
-            return $value;
+            return ['type' => 'text', 'data' => $value];
         }
     }
 
-    /**
-     * Devuelve un icono según la extensión del archivo.
-     */
-    protected static function getFileIcon(string $filename): string
+    protected static function resolveTextValue(?string $value): array
     {
-        $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+        if ($value === '' || $value === null) {
+            return ['type' => 'empty', 'data' => 'Sin respuesta'];
+        }
 
-        return match ($ext) {
-            'pdf' => '📄',
-            'jpg', 'jpeg', 'png', 'gif', 'webp', 'svg' => '🖼️',
-            'doc', 'docx' => '📝',
-            'xls', 'xlsx' => '📊',
-            'zip', 'rar', '7z' => '📦',
-            default => '📎',
-        };
+        return ['type' => 'text', 'data' => $value];
     }
 
-    /**
-     * Formatea un tamaño de archivo a texto legible.
-     */
     protected static function formatFileSize(int $bytes): string
     {
         if ($bytes < 1024) {

@@ -19,6 +19,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Enums\Width;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class GpsRouteReportPage extends Page
 {
@@ -39,6 +40,8 @@ class GpsRouteReportPage extends Page
     protected Width|string|null $maxContentWidth = Width::Full;
 
     public ?array $data = [];
+
+    private ?array $deviceOptionsCache = null;
 
     public array $reportPoints = [];
 
@@ -87,21 +90,13 @@ class GpsRouteReportPage extends Page
                             ->schema([
                                 Select::make('selectedDeviceId')
                                     ->label('Dispositivo')
-                                    ->columnSpan(4)
-                                    ->options(function (): array {
-                                        return Device::query()
-                                            ->with('user')
-                                            ->orderBy('imei')
-                                            ->get()
-                                            ->mapWithKeys(fn (Device $device): array => [
-                                                $device->id => $device->imei.($device->user ? ' · '.$device->user->name : ''),
-                                            ])
-                                            ->all();
-                                    })
+                                    ->columnSpan(8)
+                                    ->options(fn (): array => $this->getDeviceOptions())
                                     ->searchable()
                                     ->placeholder('Seleccioná un dispositivo')
                                     ->live()
-                                    ->afterStateUpdated(fn () => $this->generateReport()),
+                                    ->afterStateUpdated(fn () => $this->generateReport())
+                                    ->selectablePlaceholder(false),
 
                                 Select::make('dateFilter')
                                     ->label('Período')
@@ -132,7 +127,8 @@ class GpsRouteReportPage extends Page
                                     ->live()
                                     ->afterStateUpdated(fn () => $this->generateReport()),
                             ]),
-                    ]),
+                    ])
+                    ->columns(12),
             ]);
     }
 
@@ -141,12 +137,16 @@ class GpsRouteReportPage extends Page
         $data = $this->form->getState();
 
         if (blank($data['selectedDeviceId'] ?? null)) {
+            $this->clearReport();
+
             return;
         }
 
         $device = Device::query()->with('user')->find($data['selectedDeviceId']);
 
         if (! $device) {
+            $this->clearReport();
+
             return;
         }
 
@@ -156,16 +156,18 @@ class GpsRouteReportPage extends Page
 
         logger()->info('GPS Report Result', ['count' => $points->count(), 'range' => [$startTimeMs, $endTimeMs]]);
 
-        $this->reportPoints = $points->map(function (GpsTrack $track, int $index) use ($points, $reportService): array {
+        $pointsArray = $points->all();
+        $pointsCount = count($pointsArray);
+
+        $this->reportPoints = array_map(function (GpsTrack $track, int $index) use ($pointsArray, $pointsCount, $reportService): array {
             $timeHuman = now()
                 ->setTimestamp((int) ($track->time / 1000))
                 ->setTimezone('America/Lima')
                 ->format('d/m/Y H:i:s');
 
-            $speed = null;
             $speedHuman = '-';
-            if ($index > 0) {
-                $prevTrack = $points[$index - 1];
+            if ($index > 0 && $pointsCount > 1) {
+                $prevTrack = $pointsArray[$index - 1];
                 $timeDiff = (int) $track->time - (int) $prevTrack->time;
                 $speed = $reportService->calculateSpeed(
                     (float) $prevTrack->latitude,
@@ -184,11 +186,10 @@ class GpsRouteReportPage extends Page
                 'accuracy_human' => "{$track->accuracy} m",
                 'time' => $track->time,
                 'time_human' => $timeHuman,
-                'speed' => $speed,
                 'speed_human' => $speedHuman,
                 'index' => $index + 1,
             ];
-        })->all();
+        }, $pointsArray, array_keys($pointsArray));
 
         // Segment tracks by time gaps (>5 min) to avoid connecting unrelated trips
         $segments = $reportService->segmentTracks($points);
@@ -238,7 +239,18 @@ class GpsRouteReportPage extends Page
         ];
     }
 
-    public function exportToExcel(): \Symfony\Component\HttpFoundation\BinaryFileResponse|null
+    private function clearReport(): void
+    {
+        $this->reportPoints = [];
+        $this->reportSegments = [];
+        $this->pointsCount = 0;
+        $this->distanceFormatted = '0 m';
+        $this->durationFormatted = '0min';
+        $this->reportGenerated = false;
+        $this->currentPage = 1;
+    }
+
+    public function exportToExcel(): ?BinaryFileResponse
     {
         $data = $this->form->getState();
 
@@ -330,6 +342,25 @@ class GpsRouteReportPage extends Page
         ];
     }
 
+    private function getDeviceOptions(): array
+    {
+        if ($this->deviceOptionsCache !== null) {
+            return $this->deviceOptionsCache;
+        }
+
+        $this->deviceOptionsCache = Device::query()
+            ->select('id', 'imei', 'user_id')
+            ->with('user:id,name')
+            ->orderBy('imei')
+            ->get()
+            ->mapWithKeys(fn (Device $device): array => [
+                $device->id => trim($device->imei.' - '.($device->user?->name ?? 'Sin asignar')),
+            ])
+            ->all();
+
+        return $this->deviceOptionsCache;
+    }
+
     private function getReportService(): GpsRouteReportService
     {
         static $service;
@@ -362,12 +393,18 @@ class GpsRouteReportPage extends Page
                 ];
             })(),
             'custom' => (function () use ($tz, $startDate, $endDate): array {
-                $start = $startDate
-                    ? Carbon::createFromFormat('Y-m-d', $startDate, $tz)->startOfDay()
-                    : now()->setTimezone($tz)->startOfDay();
-                $end = $endDate
-                    ? Carbon::createFromFormat('Y-m-d', $endDate, $tz)->endOfDay()
-                    : now()->setTimezone($tz)->endOfDay();
+                if (! $startDate || ! $endDate) {
+                    $now = now()->setTimezone($tz);
+
+                    return [(int) $now->startOfDay()->timestamp * 1000, (int) $now->endOfDay()->timestamp * 1000];
+                }
+
+                $start = Carbon::createFromFormat('Y-m-d', $startDate, $tz)->startOfDay();
+                $end = Carbon::createFromFormat('Y-m-d', $endDate, $tz)->endOfDay();
+
+                if ($end < $start) {
+                    [$start, $end] = [$end, $start];
+                }
 
                 return [
                     (int) $start->timestamp * 1000,
