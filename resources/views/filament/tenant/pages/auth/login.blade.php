@@ -27,15 +27,15 @@
                 <div class="drrx-live-stats">
                     <div class="drrx-stat-item">
                         <span class="drrx-stat-value" id="drrxStatVehicles">247</span>
-                        <span class="drrx-stat-label"><span class="drrx-stat-dot green"></span>Vehiculos</span>
+                        <span class="drrx-stat-label"><span class="drrx-stat-dot green"></span>PERSONAS</span>
                     </div>
                     <div class="drrx-stat-item">
                         <span class="drrx-stat-value" id="drrxStatRoutes">89</span>
-                        <span class="drrx-stat-label"><span class="drrx-stat-dot amber"></span>Rutas Activas</span>
+                        <span class="drrx-stat-label"><span class="drrx-stat-dot amber"></span>REPARTO</span>
                     </div>
                     <div class="drrx-stat-item">
                         <span class="drrx-stat-value" id="drrxStatAlerts">3</span>
-                        <span class="drrx-stat-label"><span class="drrx-stat-dot blue"></span>Alertas</span>
+                        <span class="drrx-stat-label"><span class="drrx-stat-dot blue"></span>LOGISTA</span>
                     </div>
                 </div>
             </div>
