@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers\Filament;
 
+use App\Filament\Tenant\Pages\Auth\Login;
 use App\Http\Middleware\InitializeTenancyByDomainIfApplicable;
 use App\Providers\Filament\Concerns\HasDrRouteBranding;
 use Filament\Http\Middleware\Authenticate;
@@ -32,9 +33,9 @@ class TenantPanelProvider extends PanelProvider
         return $this->applyDrRouteBranding($panel)
             ->id('tenant')
             ->path('app')
-            ->login()
+            ->login(Login::class)
             ->colors([
-                'primary' => Color::Emerald,
+                'primary' => Color::Indigo,
             ])
             ->authGuard('web')
             ->sidebarCollapsibleOnDesktop()
