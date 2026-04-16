@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Providers\Filament;
 
 use App\Http\Middleware\InitializeTenancyByDomainIfApplicable;
+use App\Providers\Filament\Concerns\HasDrRouteBranding;
 use Filament\Http\Middleware\Authenticate;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Support\Facades\Blade;
@@ -24,9 +25,11 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class TenantPanelProvider extends PanelProvider
 {
+    use HasDrRouteBranding;
+
     public function panel(Panel $panel): Panel
     {
-        return $panel
+        return $this->applyDrRouteBranding($panel)
             ->id('tenant')
             ->path('app')
             ->login()

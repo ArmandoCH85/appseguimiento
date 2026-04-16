@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers\Filament;
 
+use App\Providers\Filament\Concerns\HasDrRouteBranding;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -21,16 +22,14 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class CentralPanelProvider extends PanelProvider
 {
+    use HasDrRouteBranding;
+
     public function panel(Panel $panel): Panel
     {
-        return $panel
+        return $this->applyDrRouteBranding($panel)
             ->id('central')
             ->path('central')
             ->login()
-            ->brandName('Doctor Security')
-            ->brandLogo(asset('images/dr.svg'))
-            ->brandLogoHeight('2.5rem')
-            ->darkModeBrandLogo(asset('images/dr-light.svg'))
             ->colors([
                 'primary' => Color::Indigo,
             ])

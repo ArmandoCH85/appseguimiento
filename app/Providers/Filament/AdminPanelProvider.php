@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Providers\Filament;
 
 use App\Models\Central\CentralUser;
+use App\Providers\Filament\Concerns\HasDrRouteBranding;
 
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -25,9 +26,11 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class AdminPanelProvider extends PanelProvider
 {
+    use HasDrRouteBranding;
+
     public function panel(Panel $panel): Panel
     {
-        return $panel
+        return $this->applyDrRouteBranding($panel)
             ->default()
             ->id('admin')
             ->path('admin')

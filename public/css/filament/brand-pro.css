@@ -1,0 +1,74 @@
+.fi-topbar {
+    min-height: 4.75rem;
+    padding-inline: 1.25rem;
+}
+
+.fi-topbar-start,
+.fi-sidebar-header-logo-ctn,
+.fi-simple-header {
+    display: flex;
+    align-items: center;
+}
+
+.fi-topbar-start {
+    margin-inline-end: 1rem;
+}
+
+.fi-topbar-start .fi-logo,
+.fi-sidebar-header .fi-logo,
+.fi-simple-header .fi-logo {
+    transform-origin: left center;
+    filter: drop-shadow(0 10px 24px rgba(15, 23, 42, 0.08));
+}
+
+.fi-sidebar-header {
+    min-height: 5.25rem;
+    padding-inline: 1.25rem;
+    padding-block: 0.875rem;
+}
+
+.fi-body-has-topbar .fi-sidebar-header {
+    padding-inline: 1.5rem;
+}
+
+:not(.fi-body-has-topbar) .fi-sidebar-header {
+    padding-inline: 1rem;
+}
+
+:not(.fi-body-has-topbar) .fi-sidebar-header .fi-logo {
+    margin-inline-start: 0;
+}
+
+.fi-sidebar-header-logo-ctn {
+    min-height: 4rem;
+}
+
+.fi-simple-header {
+    gap: 0.5rem;
+}
+
+.fi-simple-header .fi-logo {
+    margin-bottom: 0.5rem;
+}
+
+@media (min-width: 1024px) {
+    .fi-topbar {
+        min-height: 5rem;
+        padding-inline: 1.5rem;
+    }
+
+    .fi-topbar-start .fi-logo {
+        margin-inline-start: 0.25rem;
+    }
+
+    .fi-sidebar-header {
+        min-height: 5.5rem;
+    }
+}
+
+.dark .fi-topbar-start .fi-logo,
+.dark .fi-sidebar-header .fi-logo,
+.dark .fi-simple-header .fi-logo {
+    filter: drop-shadow(0 12px 28px rgba(2, 132, 199, 0.12));
+}
+
