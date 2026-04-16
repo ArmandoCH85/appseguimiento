@@ -1,0 +1,567 @@
+/* ============================================================
+   DR RouteX — Central Login Custom Styles
+   Layout: <x-filament-panels::page.simple> wrapper + split flex
+   Estrategia: Override Filament's layout constraints from inside
+   ============================================================ */
+
+/* ============================================
+   ROOT VARIABLES
+   ============================================ */
+:root {
+    --drrx-blue-gps: #1E88E5;
+    --drrx-blue-gps-light: #42A5F5;
+    --drrx-blue-gps-dark: #1565C0;
+    --drrx-black-carbon: #1A1A1A;
+    --drrx-white: #FFFFFF;
+    --drrx-green-route: #4CAF50;
+    --drrx-amber-route: #FFC107;
+    --drrx-red-route: #FF5722;
+    --drrx-gray-text: #666666;
+    --drrx-gray-light: #F5F7FA;
+    --drrx-gray-border: #E0E4EA;
+    --drrx-gray-muted: #9EA7B3;
+    --drrx-sidebar-bg: #0D1B2A;
+    --drrx-sidebar-surface: rgba(255, 255, 255, 0.05);
+    /* Corporate palette */
+    --drrx-corp-blue: #003DA5;
+    --drrx-corp-orange: #FF6600;
+    --drrx-corp-blue-pale: #E8EFF8;
+    --drrx-corp-blue-light: #F0F4FA;
+}
+
+/* ============================================
+   ROMPER FILAMENT DEFAULT LAYOUT CONSTRAINTS
+   ============================================ */
+
+/* Body — override Filament's fi-body when login is active */
+body:has(.drrx-login-wrapper) {
+    background: var(--drrx-white) !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Layout simple — quitar constraints del layout wrapper */
+body:has(.drrx-login-wrapper) .fi-simple-layout {
+    min-height: 100vh !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* Main container — full width/height */
+body:has(.drrx-login-wrapper) .fi-simple-main-ctn {
+    min-height: 100vh !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* Main element — override max-width (fi-width-lg, fi-width-xl, etc.) */
+body:has(.drrx-login-wrapper) .fi-simple-main {
+    max-width: 100% !important;
+    width: 100% !important;
+    min-height: 100vh !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* page.simple wrapper — quitar todo su styling */
+.drrx-login-wrapper.fi-simple-page,
+.drrx-login-wrapper .fi-simple-page {
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+}
+
+/* page content wrapper */
+.drrx-login-wrapper .fi-simple-page-content {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+}
+
+/* Ocultar heading/subheading vacío de Filament (por si acaso) */
+.drrx-login-wrapper .fi-page-heading,
+.drrx-login-wrapper .fi-simple-page-heading,
+.drrx-login-wrapper h1.fi-heading,
+.drrx-login-wrapper .fi-heading:empty,
+.drrx-login-wrapper [class*="fi-header"] {
+    display: none !important;
+}
+
+/* Ocultar powered by Filament */
+.drrx-login-wrapper [class*="powered"],
+.drrx-login-wrapper a[href*="filament"] {
+    display: none !important;
+}
+
+/* ============================================
+   SPLIT LAYOUT — Horizontal flex container
+   ============================================ */
+.drrx-split-layout {
+    display: flex !important;
+    flex-direction: row !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: 100vw !important;
+    max-height: 100vh !important;
+    min-height: 100vh !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+    font-family: 'IBM Plex Sans', sans-serif;
+    background: var(--drrx-gray-light);
+}
+
+/* ============================================
+   LADO IZQUIERDO — Brand
+   ============================================ */
+.drrx-brand-side {
+    flex: 1.15 !important;
+    background: linear-gradient(160deg, #FFFFFF 0%, var(--drrx-corp-blue-light) 40%, var(--drrx-corp-blue-pale) 100%);
+    position: relative;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+    min-height: 100vh !important;
+    height: 100vh !important;
+    box-sizing: border-box !important;
+}
+
+/* ============================================
+   LADO DERECHO — Form
+   ============================================ */
+.drrx-form-side {
+    flex: 0.85 !important;
+    background: var(--drrx-white);
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: relative;
+    min-height: 100vh !important;
+    height: 100vh !important;
+    overflow-y: auto !important;
+    box-sizing: border-box !important;
+}
+
+/* Form wrapper */
+.drrx-form-wrapper {
+    width: 100% !important;
+    max-width: 420px !important;
+    padding: 40px 32px !important;
+    box-sizing: border-box !important;
+}
+
+/* Ensure Filament form components don't break layout */
+.drrx-form-wrapper :is(.fi-form, .fi-schema, .fi-section, .fi-field) {
+    max-width: 100% !important;
+}
+
+/* ============================================
+   CANVAS — Mapa GPS animado
+   ============================================ */
+#drrxMapCanvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    opacity: 0.35;
+}
+
+/* Gradient overlay sobre el canvas — subtle corporate accents */
+.drrx-brand-side::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse at 25% 40%, rgba(0, 61, 165, 0.06), transparent 60%),
+        radial-gradient(ellipse at 75% 70%, rgba(255, 102, 0, 0.04), transparent 50%);
+    z-index: 1;
+    pointer-events: none;
+}
+
+.drrx-brand-side::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(232, 239, 248, 0.3) 100%);
+    z-index: 1;
+    pointer-events: none;
+}
+
+/* ============================================
+   BRAND CONTENT — Contenido central del brand
+   ============================================ */
+.drrx-brand-content {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 40px;
+    animation: drrxBrandEntry 1s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes drrxBrandEntry {
+    from { opacity: 0; transform: translateY(30px) scale(0.95); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ============================================
+   LOGO IMAGE — PNG logo centrado
+   ============================================ */
+.drrx-logo-image-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 40px;
+    padding: 0 24px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.drrx-logo-image {
+    max-width: 320px;
+    width: 80%;
+    height: auto;
+    display: block;
+    filter: drop-shadow(0 4px 24px rgba(0, 61, 165, 0.12));
+    animation: drrxLogoEntry 1s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes drrxLogoEntry {
+    from { opacity: 0; transform: translateY(20px) scale(0.95); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ============================================
+   LIVE STATS — Indicadores de estado en vivo
+   ============================================ */
+.drrx-live-stats {
+    display: flex;
+    gap: 28px;
+    margin-top: 16px;
+}
+
+.drrx-stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.drrx-stat-value {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 26px;
+    color: var(--drrx-corp-blue);
+}
+
+.drrx-stat-label {
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #5A6B7F;
+}
+
+.drrx-stat-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 4px;
+    animation: drrxDotBlink 2s ease-in-out infinite;
+}
+
+.drrx-stat-dot.green { background: var(--drrx-green-route); }
+.drrx-stat-dot.amber { background: var(--drrx-corp-orange); }
+.drrx-stat-dot.blue  { background: var(--drrx-corp-blue); }
+
+@keyframes drrxDotBlink {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.3; }
+}
+
+/* ============================================
+   ROUTE LINE — Línea decorativa animada
+   ============================================ */
+.drrx-route-line {
+    position: absolute;
+    bottom: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 3;
+    width: 260px;
+    height: 4px;
+    border-radius: 4px;
+    background: rgba(0, 61, 165, 0.08);
+    overflow: hidden;
+}
+
+.drrx-route-line::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -40%;
+    width: 40%;
+    height: 100%;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--drrx-corp-blue), var(--drrx-corp-orange));
+    animation: drrxRouteSlide 3s ease-in-out infinite;
+}
+
+@keyframes drrxRouteSlide {
+    0%   { left: -40%; }
+    100% { left: 100%; }
+}
+
+/* ============================================
+   FORM HEADER (custom)
+   ============================================ */
+.drrx-form-header {
+    margin-bottom: 36px;
+}
+
+.drrx-welcome {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--drrx-corp-orange);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+
+.drrx-form-title {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 28px;
+    color: var(--drrx-black-carbon);
+    margin-bottom: 6px;
+}
+
+.drrx-form-subtitle {
+    font-size: 14px;
+    color: var(--drrx-gray-text);
+    line-height: 1.5;
+}
+
+/* ============================================
+   FILAMENT FORM OVERRIDES — Custom login form styling
+   ============================================ */
+
+/* Ocultar heading/subheading de Filament dentro del form side */
+.drrx-form-side .fi-page-heading,
+.drrx-form-side .fi-simple-page-heading,
+.drrx-form-side h1.fi-heading,
+.drrx-form-side .fi-heading:empty {
+    display: none !important;
+}
+
+/* Quitar card/wrapper de Filament */
+.drrx-form-side .fi-simple-page,
+.drrx-form-side .fi-page,
+.drrx-form-side [class*="fi-simple"],
+.drrx-form-side [class*="fi-page"] {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+}
+
+/* Form / Schema container */
+.drrx-form-side .fi-form,
+.drrx-form-side .fi-schema,
+.drrx-form-side .fi-section {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* Field wrapper spacing */
+.drrx-form-side .fi-fo-field {
+    margin-bottom: 20px !important;
+}
+
+/* Labels */
+.drrx-form-side .fi-fo-field-label,
+.drrx-form-side .fi-fo-field-label-content {
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    color: var(--drrx-black-carbon) !important;
+    margin-bottom: 6px !important;
+    display: block !important;
+}
+
+/* Input wrapper */
+.drrx-form-side .fi-input-wrp,
+.drrx-form-side .fi-fo-text-input {
+    background: var(--drrx-gray-light) !important;
+    border: 1.5px solid var(--drrx-gray-border) !important;
+    border-radius: 10px !important;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    box-shadow: none !important;
+}
+
+.drrx-form-side .fi-input-wrp:focus-within,
+.drrx-form-side .fi-fo-text-input:focus-within {
+    border-color: var(--drrx-corp-blue) !important;
+    background: var(--drrx-white) !important;
+    box-shadow: 0 0 0 3px rgba(0,61,165,0.10) !important;
+}
+
+/* Inputs (actual <input> elements) */
+.drrx-form-side .fi-input,
+.drrx-form-side input[type="email"],
+.drrx-form-side input[type="password"],
+.drrx-form-side input[type="text"],
+.drrx-form-side .drrx-input {
+    width: 100% !important;
+    padding: 12px 14px !important;
+    font-size: 14px !important;
+    color: var(--drrx-black-carbon) !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 10px !important;
+    outline: none !important;
+    box-shadow: none !important;
+    font-family: 'IBM Plex Sans', sans-serif !important;
+}
+
+/* Placeholder */
+.drrx-form-side input::placeholder {
+    color: var(--drrx-gray-muted) !important;
+}
+
+/* Botón submit (fi-btn) */
+.drrx-form-side .fi-btn {
+    width: 100% !important;
+    padding: 13px 24px !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    color: var(--drrx-white) !important;
+    background: linear-gradient(135deg, var(--drrx-corp-blue), #0050C8) !important;
+    border: none !important;
+    border-radius: 10px !important;
+    cursor: pointer !important;
+    box-shadow: 0 4px 16px rgba(0,61,165,0.3) !important;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    font-family: 'IBM Plex Sans', sans-serif !important;
+}
+
+.drrx-form-side .fi-btn:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 24px rgba(0,61,165,0.4) !important;
+    background: linear-gradient(135deg, #0050C8, var(--drrx-corp-blue)) !important;
+}
+
+/* Actions container */
+.drrx-form-side .fi-actions {
+    margin-top: 8px !important;
+}
+
+/* Checkbox custom */
+.drrx-form-side .fi-checkbox-input,
+.drrx-form-side input[type="checkbox"] {
+    accent-color: var(--drrx-corp-blue) !important;
+    width: 16px !important;
+    height: 16px !important;
+    cursor: pointer !important;
+}
+
+/* Checkbox label inline */
+.drrx-form-side .fi-fo-field-has-inline-label .fi-fo-field-label {
+    font-size: 13px !important;
+    font-weight: 400 !important;
+    color: var(--drrx-gray-text) !important;
+}
+
+/* Error messages styling */
+.drrx-form-side .fi-fo-field-wrp-error-message {
+    font-size: 12px !important;
+    color: var(--drrx-red-route) !important;
+}
+
+/* Password reveal button */
+.drrx-form-side .fi-input-wrp-actions button,
+.drrx-form-side .fi-icon-btn {
+    color: var(--drrx-gray-muted) !important;
+}
+
+.drrx-form-side .fi-input-wrp-actions button:hover,
+.drrx-form-side .fi-icon-btn:hover {
+    color: var(--drrx-corp-blue) !important;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 900px) {
+    .drrx-split-layout {
+        flex-direction: column !important;
+        height: auto !important;
+        min-height: 100vh !important;
+        max-height: none !important;
+    }
+
+    .drrx-brand-side {
+        min-height: 40vh !important;
+        height: 40vh !important;
+        flex: none !important;
+    }
+
+    .drrx-form-side {
+        min-height: 60vh !important;
+        height: auto !important;
+        flex: none !important;
+        flex-grow: 1 !important;
+    }
+
+    .drrx-brand-name { font-size: 32px; }
+    .drrx-live-stats { gap: 16px; }
+    .drrx-stat-value { font-size: 20px; }
+}
+
+@media (max-width: 500px) {
+    .drrx-live-stats {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .drrx-form-wrapper {
+        padding: 24px 16px !important;
+    }
+}
+
+/* ============================================
+   ACCESSIBILITY
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+    .drrx-brand-side *,
+    .drrx-brand-side *::before,
+    .drrx-brand-side *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Focus visible */
+.drrx-brand-side :focus-visible {
+    outline: 2px solid var(--drrx-corp-blue);
+    outline-offset: 2px;
+}

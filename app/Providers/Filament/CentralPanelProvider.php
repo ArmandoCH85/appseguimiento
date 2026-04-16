@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers\Filament;
 
+use App\Filament\Central\Pages\Auth\Login;
 use App\Providers\Filament\Concerns\HasDrRouteBranding;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -29,7 +30,7 @@ class CentralPanelProvider extends PanelProvider
         return $this->applyDrRouteBranding($panel)
             ->id('central')
             ->path('central')
-            ->login()
+            ->login(Login::class)
             ->colors([
                 'primary' => Color::Indigo,
             ])
