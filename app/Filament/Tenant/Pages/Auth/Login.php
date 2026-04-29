@@ -9,7 +9,38 @@ use Filament\Schemas\Components\Component;
 
 class Login extends BaseLogin
 {
+    public ?string $turnstileToken = null;
+
     protected string $view = 'filament.tenant.pages.auth.login';
+
+    public function authenticate(): ?\Filament\Auth\Http\Responses\Contracts\LoginResponse
+    {
+        if (! $this->turnstileToken) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'email' => 'Por favor, espera a que el Captcha se resuelva o recarga la página.',
+            ]);
+        }
+
+        $captcha = \Illuminate\Support\Facades\Http::asForm()->post('https://challenges.cloudflare.com/turnstile/v0/siteverify', [
+            'secret' => env('TURNSTILE_SECRET_KEY'),
+            'response' => $this->turnstileToken,
+            'remoteip' => request()->ip(),
+        ])->json();
+
+        if (!($captcha['success'] ?? false)) {
+            $this->dispatch('reset-captcha');
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'email' => 'Captcha inválido o expirado. Por favor, intenta nuevamente.',
+            ]);
+        }
+
+        try {
+            return parent::authenticate();
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $this->dispatch('reset-captcha');
+            throw $e;
+        }
+    }
 
     public function getHeading(): string
     {

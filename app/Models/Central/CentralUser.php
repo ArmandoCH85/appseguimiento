@@ -28,6 +28,8 @@ class CentralUser extends Authenticatable implements FilamentUser
         'email',
         'password',
         'is_super_admin',
+        'otp_code',
+        'otp_expires_at',
     ];
 
     protected $hidden = [
@@ -38,6 +40,7 @@ class CentralUser extends Authenticatable implements FilamentUser
     protected $casts = [
         'is_super_admin' => 'boolean',
         'password' => 'hashed',
+        'otp_expires_at' => 'datetime',
     ];
 
     public function canAccessPanel(Panel $panel): bool

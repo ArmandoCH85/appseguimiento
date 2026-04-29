@@ -64,6 +64,7 @@ class CentralPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
+                \App\Http\Middleware\Ensure2FA::class,
             ]);
     }
 }

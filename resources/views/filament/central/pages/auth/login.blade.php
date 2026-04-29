@@ -53,7 +53,29 @@
 
                 {{-- FORM FILAMENT NATIVO (incluye form + multi-factor + actions) --}}
                 {{ $this->content }}
+
+                {{-- Cloudflare Turnstile CAPTCHA --}}
+                <div wire:ignore class="mt-4 flex justify-center w-full">
+                    <div class="cf-turnstile" data-sitekey="{{ env('TURNSTILE_SITE_KEY') }}" data-callback="turnstileCallback"></div>
+                </div>
             </div>
         </main>
     </div>
+
+    @push('scripts')
+        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+        <script>
+            function turnstileCallback(token) {
+                @this.set('turnstileToken', token);
+            }
+
+            document.addEventListener('livewire:initialized', () => {
+                Livewire.on('reset-captcha', () => {
+                    if (typeof turnstile !== 'undefined') {
+                        turnstile.reset();
+                    }
+                });
+            });
+        </script>
+    @endpush
 </x-filament-panels::page.simple>

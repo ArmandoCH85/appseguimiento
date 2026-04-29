@@ -1,0 +1,404 @@
+/* ============================================================
+   DR RouteX — Central 2FA Page Custom Styles
+   Reutiliza variables de central-login.css
+   Layout: <x-filament-panels::page.simple> + split flex
+   ============================================================ */
+
+/* ============================================
+   WRAPPER OVERRIDES — Mismo patrón que login
+   ============================================ */
+body:has(.drrx-2fa-wrapper) {
+    background: var(--drrx-white) !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+body:has(.drrx-2fa-wrapper) .fi-simple-layout {
+    min-height: 100vh !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+body:has(.drrx-2fa-wrapper) .fi-simple-main-ctn {
+    min-height: 100vh !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+body:has(.drrx-2fa-wrapper) .fi-simple-main {
+    max-width: 100% !important;
+    width: 100% !important;
+    min-height: 100vh !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.drrx-2fa-wrapper.fi-simple-page,
+.drrx-2fa-wrapper .fi-simple-page {
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+}
+
+.drrx-2fa-wrapper .fi-simple-page-content {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+}
+
+/* Ocultar headings Filament */
+.drrx-2fa-wrapper .fi-page-heading,
+.drrx-2fa-wrapper .fi-simple-page-heading,
+.drrx-2fa-wrapper h1.fi-heading,
+.drrx-2fa-wrapper .fi-heading:empty,
+.drrx-2fa-wrapper [class*="fi-header"] {
+    display: none !important;
+}
+
+.drrx-2fa-wrapper [class*="powered"],
+.drrx-2fa-wrapper a[href*="filament"] {
+    display: none !important;
+}
+
+/* ============================================
+   SHIELD ICON
+   ============================================ */
+.drrx-2fa-icon-wrap {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 28px;
+}
+
+.drrx-2fa-icon-circle {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--drrx-corp-blue), #0050C8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 32px rgba(0, 61, 165, 0.25);
+    animation: drrx2faIconEntry 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.drrx-2fa-shield-icon {
+    width: 32px;
+    height: 32px;
+    color: white;
+    stroke: white;
+}
+
+@keyframes drrx2faIconEntry {
+    from {
+        opacity: 0;
+        transform: scale(0.5) rotate(-10deg);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
+    }
+}
+
+/* ============================================
+   2FA LABEL — "VERIFICACIÓN DE SEGURIDAD"
+   ============================================ */
+.drrx-2fa-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--drrx-corp-orange);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    animation: drrx2faLabelEntry 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+}
+
+@keyframes drrx2faLabelEntry {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================
+   OTP CELLS — 6 celdas individuales
+   ============================================ */
+.drrx-otp-container {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin: 28px 0 20px;
+    animation: drrx2faCellsEntry 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+}
+
+@keyframes drrx2faCellsEntry {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.drrx-otp-cell {
+    width: 50px;
+    height: 58px;
+    border: 2px solid var(--drrx-gray-border);
+    border-radius: 12px;
+    background: var(--drrx-gray-light);
+    text-align: center;
+    font-family: 'Outfit', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--drrx-black-carbon);
+    outline: none;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    caret-color: var(--drrx-corp-blue);
+    box-sizing: border-box;
+}
+
+.drrx-otp-cell:focus {
+    border-color: var(--drrx-corp-blue);
+    background: var(--drrx-white);
+    box-shadow: 0 0 0 3px rgba(0, 61, 165, 0.12);
+    transform: translateY(-2px);
+}
+
+.drrx-otp-cell:not(:placeholder-shown) {
+    border-color: var(--drrx-corp-blue);
+    background: var(--drrx-white);
+}
+
+/* Error shake animation */
+.drrx-otp-cell.drrx-otp-error {
+    border-color: var(--drrx-red-route) !important;
+    animation: drrx2faShake 0.4s ease-in-out;
+}
+
+@keyframes drrx2faShake {
+    0%, 100% { transform: translateX(0); }
+    20%      { transform: translateX(-6px); }
+    40%      { transform: translateX(6px); }
+    60%      { transform: translateX(-4px); }
+    80%      { transform: translateX(4px); }
+}
+
+/* Success state */
+.drrx-otp-cell.drrx-otp-success {
+    border-color: var(--drrx-green-route) !important;
+    background: #F0FFF0 !important;
+}
+
+/* ============================================
+   ERROR PLACEHOLDER
+   ============================================ */
+.drrx-2fa-error-placeholder {
+    min-height: 20px;
+    text-align: center;
+}
+
+/* ============================================
+   SUBMIT BUTTON
+   ============================================ */
+.drrx-2fa-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: 'IBM Plex Sans', sans-serif;
+    color: var(--drrx-white);
+    background: linear-gradient(135deg, var(--drrx-corp-blue), #0050C8);
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(0, 61, 165, 0.3);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: drrx2faBtnEntry 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
+}
+
+.drrx-2fa-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 24px rgba(0, 61, 165, 0.4);
+    background: linear-gradient(135deg, #0050C8, var(--drrx-corp-blue));
+}
+
+.drrx-2fa-btn:active {
+    transform: translateY(0);
+}
+
+.drrx-2fa-btn-icon {
+    flex-shrink: 0;
+}
+
+@keyframes drrx2faBtnEntry {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================
+   COUNTDOWN + RESEND
+   ============================================ */
+.drrx-2fa-resend-section {
+    display: flex;
+    justify-content: center;
+    margin-top: 24px;
+    animation: drrx2faResendEntry 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both;
+}
+
+@keyframes drrx2faResendEntry {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.drrx-2fa-countdown-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.drrx-2fa-countdown-label {
+    font-size: 13px;
+    color: var(--drrx-gray-muted);
+}
+
+.drrx-2fa-countdown-timer {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 28px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--drrx-corp-blue);
+    background: var(--drrx-corp-blue-pale);
+    border-radius: 8px;
+    padding: 0 6px;
+    transition: all 0.3s ease;
+}
+
+/* Pulse animation cuando quedan pocos segundos */
+.drrx-2fa-countdown-timer.drrx-almost-ready {
+    color: var(--drrx-corp-orange);
+    background: #FFF3E0;
+    animation: drrx2faPulse 1s ease-in-out infinite;
+}
+
+@keyframes drrx2faPulse {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.08); }
+}
+
+.drrx-2fa-resend-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: 'IBM Plex Sans', sans-serif;
+    color: var(--drrx-corp-blue);
+    background: none;
+    border: 1.5px solid var(--drrx-corp-blue);
+    border-radius: 8px;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: drrx2faResendBtnPop 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.drrx-2fa-resend-btn:hover {
+    background: var(--drrx-corp-blue);
+    color: var(--drrx-white);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 61, 165, 0.25);
+}
+
+@keyframes drrx2faResendBtnPop {
+    from { opacity: 0; transform: scale(0.9); }
+    to   { opacity: 1; transform: scale(1); }
+}
+
+/* ============================================
+   FOOTER
+   ============================================ */
+.drrx-2fa-footer {
+    margin-top: 32px;
+    text-align: center;
+    animation: drrx2faFooterEntry 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both;
+}
+
+.drrx-2fa-footer p {
+    font-size: 12px;
+    color: var(--drrx-gray-muted);
+    line-height: 1.5;
+}
+
+@keyframes drrx2faFooterEntry {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 900px) {
+    .drrx-otp-container {
+        gap: 8px;
+    }
+
+    .drrx-otp-cell {
+        width: 44px;
+        height: 52px;
+        font-size: 20px;
+    }
+}
+
+@media (max-width: 500px) {
+    .drrx-otp-container {
+        gap: 6px;
+    }
+
+    .drrx-otp-cell {
+        width: 40px;
+        height: 48px;
+        font-size: 18px;
+        border-radius: 10px;
+    }
+
+    .drrx-2fa-icon-circle {
+        width: 52px;
+        height: 52px;
+    }
+
+    .drrx-2fa-shield-icon {
+        width: 26px;
+        height: 26px;
+    }
+}
+
+/* ============================================
+   ACCESSIBILITY
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+    .drrx-2fa-icon-circle,
+    .drrx-2fa-label,
+    .drrx-otp-container,
+    .drrx-2fa-btn,
+    .drrx-2fa-resend-section,
+    .drrx-2fa-footer {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+    }
+
+    .drrx-otp-cell {
+        transition-duration: 0.01ms !important;
+    }
+}
+
+.drrx-otp-cell:focus-visible {
+    outline: 2px solid var(--drrx-corp-blue);
+    outline-offset: 2px;
+}
