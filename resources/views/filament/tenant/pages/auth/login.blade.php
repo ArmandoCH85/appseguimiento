@@ -56,7 +56,7 @@
 
                 {{-- Cloudflare Turnstile CAPTCHA --}}
                 <div wire:ignore class="mt-4 flex justify-center w-full">
-                    <div class="cf-turnstile" data-sitekey="{{ env('TURNSTILE_SITE_KEY') }}" data-callback="turnstileCallback"></div>
+                    <div class="cf-turnstile" data-sitekey="{{ config('services.turnstile.site_key') }}" data-callback="turnstileCallback"></div>
                 </div>
             </div>
         </main>

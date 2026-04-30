@@ -24,7 +24,7 @@ class Login extends BaseLogin
         }
 
         $captcha = \Illuminate\Support\Facades\Http::asForm()->post('https://challenges.cloudflare.com/turnstile/v0/siteverify', [
-            'secret' => env('TURNSTILE_SECRET_KEY'),
+            'secret' => config('services.turnstile.secret_key'),
             'response' => $this->turnstileToken,
             'remoteip' => request()->ip(),
         ])->json();
