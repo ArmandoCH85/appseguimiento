@@ -17,7 +17,16 @@ class TwoFactorAuthPage extends SimplePage
     protected static ?string $navigationLabel = 'Autenticación 2FA';
     protected string $view = 'filament.central.pages.two-factor-auth-page';
     protected static ?string $slug = '2fa';
-    protected static bool $shouldRegisterNavigation = false;
+    // Removemos protected static bool $shouldRegisterNavigation = false;
+    // porque en Filament v3, las páginas que heredan de SimplePage y tienen esto
+    // falso a veces no registran la ruta en el nombre esperado.
+    // En SimplePage, la navegación lateral ya no existe, por lo que es seguro dejarlo en true (por defecto).
+
+    public function getRouteName(): string
+    {
+        // Forzamos el nombre de la ruta para que coincida exactamente con lo que busca Ensure2FA
+        return 'filament.' . filament()->getCurrentPanel()->getId() . '.pages.2fa';
+    }
 
     public ?array $data = [];
 
