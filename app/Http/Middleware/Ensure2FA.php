@@ -24,13 +24,14 @@ class Ensure2FA
         // If user is authenticated but 2FA is not passed, redirect to 2FA page
         if (!session('2fa_passed', false)) {
             // Avoid infinite loop if we are already on the 2FA page
-            if ($request->routeIs('filament.*.pages.2fa') || $request->routeIs('filament.*.auth.logout')) {
+            // En lugar de depender de routeIs que falla si la ruta no está bien descubierta, usamos Request::is
+            if ($request->is('*/2fa') || $request->routeIs('filament.*.auth.logout')) {
                 return $next($request);
             }
             
-            // Redirect to the correct 2FA page based on the current panel
-            $panel = filament()->getCurrentPanel()->getId();
-            return redirect()->route("filament.{$panel}.pages.2fa");
+            // Redirect to the correct 2FA page based on the current panel using exact URL path
+            $panelPath = filament()->getCurrentPanel()->getPath();
+            return redirect('/' . ltrim($panelPath, '/') . '/2fa');
         }
 
         return $next($request);

@@ -4,28 +4,27 @@ namespace App\Filament\Central\Pages;
 
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
-use Filament\Pages\SimplePage;
+use Filament\Pages\Page;
 use Filament\Pages\Dashboard;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\OtpMail;
 use Filament\Notifications\Notification;
 
-class TwoFactorAuthPage extends SimplePage
+class TwoFactorAuthPage extends Page
 {
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-shield-check';
     protected static ?string $navigationLabel = 'Autenticación 2FA';
     protected string $view = 'filament.central.pages.two-factor-auth-page';
     protected static ?string $slug = '2fa';
-    // Removemos protected static bool $shouldRegisterNavigation = false;
-    // porque en Filament v3, las páginas que heredan de SimplePage y tienen esto
-    // falso a veces no registran la ruta en el nombre esperado.
-    // En SimplePage, la navegación lateral ya no existe, por lo que es seguro dejarlo en true (por defecto).
+    protected static string $layout = 'filament-panels::components.layout.simple';
 
-    public function getRouteName(): string
+    // Volvemos al registro normal de Filament sin forzar el routeName
+    // Usar layout simple asegura que no se muestre la barra lateral,
+    // pero heredando de Page aseguramos que Filament registre la ruta automáticamente.
+    public static function shouldRegisterNavigation(): bool
     {
-        // Forzamos el nombre de la ruta para que coincida exactamente con lo que busca Ensure2FA
-        return 'filament.' . filament()->getCurrentPanel()->getId() . '.pages.2fa';
+        return false;
     }
 
     public ?array $data = [];
