@@ -4,12 +4,14 @@ namespace App\Filament\Central\Pages;
 
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
-use Filament\Pages\Page;
+use Filament\Pages\SimplePage;
 use Filament\Pages\Dashboard;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\OtpMail;
 use Filament\Notifications\Notification;
 
-class TwoFactorAuthPage extends Page
+class TwoFactorAuthPage extends SimplePage
 {
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-shield-check';
     protected static ?string $navigationLabel = 'Autenticación 2FA';
@@ -29,10 +31,17 @@ class TwoFactorAuthPage extends Page
         return $schema
             ->schema([
                 TextInput::make('otp_code')
-                    ->label('Código OTP')
+                    ->hiddenLabel()
                     ->required()
                     ->length(6)
-                    ->helperText('Ingresa el código de 6 dígitos enviado a tu correo.'),
+                    ->placeholder('X X X X X X')
+                    ->extraInputAttributes([
+                        'class' => 'text-center text-3xl tracking-[1em] font-mono py-4',
+                        'maxlength' => 6,
+                        'pattern' => '[0-9]*',
+                        'inputmode' => 'numeric',
+                        'autocomplete' => 'one-time-code',
+                    ]),
             ])
             ->statePath('data');
     }
@@ -67,6 +76,46 @@ class TwoFactorAuthPage extends Page
         session(['2fa_passed' => true]);
 
         $this->redirect(Dashboard::getUrl());
+    }
+
+    public function resendOtp(): void
+    {
+        $user = Auth::user();
+        
+        // Prevent spamming
+        if (session()->has('last_otp_sent') && now()->diffInSeconds(session('last_otp_sent')) < 60) {
+            Notification::make()
+                ->title('Por favor espera un momento.')
+                ->body('Debes esperar 60 segundos antes de solicitar otro código.')
+                ->warning()
+                ->send();
+            return;
+        }
+
+        $otp = (string) rand(100000, 999999);
+        
+        $user->update([
+            'otp_code' => $otp,
+            'otp_expires_at' => now()->addMinutes(5),
+        ]);
+
+        Mail::to($user->email)->send(new OtpMail($otp));
+        session(['last_otp_sent' => now()]);
+
+        Notification::make()
+            ->title('Código reenviado')
+            ->body('Hemos enviado un nuevo código de 6 dígitos a tu correo.')
+            ->success()
+            ->send();
+    }
+
+    public function cancelLogin(): void
+    {
+        Auth::logout();
+        session()->invalidate();
+        session()->regenerateToken();
+        
+        $this->redirect('/central/login');
     }
 
     public function getHeading(): string
