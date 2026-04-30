@@ -39,7 +39,10 @@ class OtpMail extends Mailable implements ShouldQueue
     public function content(): Content
     {
         return new Content(
-            htmlString: "<h1>Tu código de verificación es: <strong>{$this->otpCode}</strong></h1><p>Este código expira en 5 minutos. No lo compartas con nadie.</p>",
+            view: 'emails.otp',
+            with: [
+                'otp' => $this->otpCode,
+            ],
         );
     }
 
