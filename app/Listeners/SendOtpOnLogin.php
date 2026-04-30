@@ -2,6 +2,7 @@
 
 namespace App\Listeners;
 
+use App\Models\Tenant\User as TenantUser;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
@@ -24,6 +25,10 @@ class SendOtpOnLogin
     public function handle(Login $event): void
     {
         $user = $event->user;
+
+        if ($user instanceof TenantUser) {
+            return;
+        }
 
         // Solo generar y enviar OTP si la sesión de 2FA no está aprobada y si no tiene un código vigente
         if (!session('2fa_passed', false)) {
