@@ -169,7 +169,10 @@ class GpsRouteReportPage extends Page
         [$startTimeMs, $endTimeMs] = $this->getTimeRange($data);
         $points = $reportService->getTracksForReport($data['selectedDeviceId'], $startTimeMs, $endTimeMs);
 
-        logger()->info('GPS Report Result', ['count' => $points->count(), 'range' => [$startTimeMs, $endTimeMs]]);
+        $originalCount = $points->count();
+        $points = $reportService->deduplicateConsecutivePoints($points);
+
+        logger()->info('GPS Report Result', ['count' => $points->count(), 'deduped' => $originalCount - $points->count(), 'range' => [$startTimeMs, $endTimeMs]]);
 
         $pointsArray = $points->all();
         $pointsCount = count($pointsArray);

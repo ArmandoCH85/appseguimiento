@@ -9,7 +9,7 @@ use Illuminate\Support\Collection;
 
 class GpsRouteReportService
 {
-    private const SEGMENT_GAP_MS = 300000; // 5 minutos — gap mínimo para cortar segmento
+    private const SEGMENT_GAP_MS = 1800000; // 30 minutos — cubre gaps de hasta ~25 min entre lecturas reales del dispositivo
 
     public function calculateDistance(float $lat1, float $lon1, float $lat2, float $lon2): float
     {
@@ -138,6 +138,35 @@ class GpsRouteReportService
         $result[] = $arr[$count - 1];
 
         return $result;
+    }
+
+    public function deduplicateConsecutivePoints(Collection $points): Collection
+    {
+        $arr = $points->all();
+        $count = count($arr);
+
+        if ($count <= 1) {
+            return $points;
+        }
+
+        $result = [$arr[0]];
+
+        for ($i = 1; $i < $count; $i++) {
+            $prevLat = (float) $arr[$i - 1]->latitude;
+            $prevLng = (float) $arr[$i - 1]->longitude;
+            $currLat = (float) $arr[$i]->latitude;
+            $currLng = (float) $arr[$i]->longitude;
+            $prevTime = (int) $arr[$i - 1]->time;
+            $currTime = (int) $arr[$i]->time;
+
+            if ($currLat === $prevLat && $currLng === $prevLng && $currTime === $prevTime) {
+                continue;
+            }
+
+            $result[] = $arr[$i];
+        }
+
+        return collect($result);
     }
 
     public function segmentTracks(Collection $points, int $gapMs = self::SEGMENT_GAP_MS): array
